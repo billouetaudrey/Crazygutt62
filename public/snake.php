@@ -146,6 +146,7 @@ define('UPLOAD_DIR', 'uploads/');
                 <div style="margin-top:.8rem;">
                     <button type="submit" class="btn ok">Enregistrer les modifications</button>
                 </div>
+
             </form>
         </details>
         
@@ -157,7 +158,17 @@ define('UPLOAD_DIR', 'uploads/');
             Poids : <?= ($snake['weight'] !== null) ? h($snake['weight']) . ' g' : 'N/A' ?><br>
             Type de repas par défaut : <?= h($snake['default_meal_type']) ?: 'N/A' ?><br>
             Commentaire : <?= $snake['comment'] ? nl2br(h($snake['comment'])) : 'N/A' ?>
-        </p>
+<div class="card">
+    <h3>Supprimer ce serpent</h3>
+    <p>
+        Attention : Cette action est irréversible et supprimera toutes les informations associées à ce serpent (repas, mues, photos).
+    </p>
+    <form method="post" action="delete_snake.php" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer définitivement ce serpent et toutes ses données ?')">
+        <input type="hidden" name="id" value="<?= (int)$snake['id'] ?>">
+        <button type="submit" class="btn danger full-width">Supprimer le serpent</button>
+    </form>
+</div>       
+ </p>
     </div>
 
     ---
@@ -275,3 +286,4 @@ define('UPLOAD_DIR', 'uploads/');
 </div>
 </body>
 </html>
+
