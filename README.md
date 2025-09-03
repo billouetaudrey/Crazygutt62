@@ -1,6 +1,7 @@
 # Pantherophis Guttatus — Suivi des serpents (PHP/MySQL)
 
-Un mini-site pour gérer des fiches de Pantherophis guttatus (corn snakes). Créé à l'aide de chatgpt et gemini
+Un mini-site pour gérer des fiches de Pantherophis guttatus (cornsnakes). Créé à l'aide de chatgpt et gemini
+Compatible smartphone (Testé sur chrome Andeoid uniquement)
 
 ## Fonctionnalités
 - Thème clair/sombre (bouton lune/soleil sur toutes les pages, mémorisé via localStorage).
@@ -70,6 +71,7 @@ Bon élevage 🐍
 <img width="1199" height="922" alt="image" src="https://github.com/user-attachments/assets/15093cb1-2596-419c-b5e8-912535a0126f" />
 <img width="1143" height="911" alt="image" src="https://github.com/user-attachments/assets/f5351c2a-b107-4273-aa67-712f6cd3761b" />
 <img width="1115" height="356" alt="image" src="https://github.com/user-attachments/assets/8aa7791c-3e01-43fc-8f4b-f9b6265fcef8" />
+
 
 
 
