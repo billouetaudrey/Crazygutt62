@@ -275,7 +275,6 @@ try {
                                 <a class="btn secondary" href="<?= base_url('edit_snake.php?id=' . (int)$s['id']) ?>">Éditer</a>
                                 <form method="post" action="delete.php" onsubmit="return confirm('Supprimer définitivement ce serpent ?');">
                                     <input type="hidden" name="id" value="<?= (int)$s['id'] ?>">
-                                    <button class="btn danger" type="submit">Effacer</button>
                                 </form>
                             </td>
                         </tr>
