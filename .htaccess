@@ -1,0 +1,19 @@
+# --- SECURITE DE BASE ---
+# Désactiver la navigation dans les répertoires
+Options -Indexes
+
+# Protéger les fichiers .htaccess et les fichiers inclus
+<FilesMatch "^\.ht|includes">
+    Require all denied
+</FilesMatch>
+
+# Interdire les méthodes HTTP dangereuses
+<LimitExcept GET POST>
+    Require all denied
+</LimitExcept>
+
+# Forcer la redirection vers HTTPS
+# Si votre hébergeur ne supporte pas HTTPS, supprimez ce bloc
+RewriteEngine On
+RewriteBase /guttata/
+RewriteRule ^((?!public/).*)$ public/$1 [L,NC]

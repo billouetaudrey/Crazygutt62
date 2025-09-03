@@ -1,0 +1,220 @@
+
+/* Style des menus déroulants */
+select {
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid #555;
+    background-color: var(--bg-color, #222); /* fond selon ton thème */
+    color: var(--text-color, #fff);          /* texte visible */
+    font-size: 14px;
+    cursor: pointer;
+}
+
+/* Pour s'assurer que les options sont lisibles */
+select option {
+    background-color: var(--bg-color, #222);
+    color: var(--text-color, #fff);
+}
+
+body.light select {
+    background-color: #fff;
+    color: #000;
+    border: 1px solid #ccc;
+}
+
+body.dark select {
+    background-color: #222;
+    color: #fff;
+    border: 1px solid #555;
+}
+
+/* Styles simples avec support clair/sombre */
+:root {
+  --bg: #0b1016;
+  --panel: #111827;
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+  --accent: #38bdf8;
+  --male: #3b82f6;
+  --female: #ec4899;
+  --danger: #ef4444;
+  --ok: #10b981;
+  --border: #1f2937;
+}
+
+:root.light {
+  --bg: #f7fafc;
+  --panel: #ffffff;
+  --text: #111827;
+  --muted: #6b7280;
+  --accent: #0ea5e9;
+  --male: #2563eb;
+  --female: #db2777;
+  --danger: #dc2626;
+  --ok: #059669;
+  --border: #e5e7eb;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.25rem;
+}
+
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.brand { font-weight: 700; font-size: 1.25rem; letter-spacing: .2px; }
+.theme-toggle {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  padding: .5rem .75rem;
+  border-radius: .75rem;
+  cursor: pointer;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 6px 20px rgba(0,0,0,.15);
+}
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+
+label { display: block; font-size: .9rem; color: var(--muted); margin-bottom: .25rem; }
+input[type=text], input[type=number], select, textarea {
+  width: 100%; padding: .6rem .7rem; border-radius: .6rem; border: 1px solid var(--border);
+  background: transparent; color: var(--text);
+}
+textarea { min-height: 90px; }
+button, .btn {
+  display:inline-flex; align-items:center; gap:.4rem;
+  background: var(--accent); border: none; color: #fff; padding: .6rem .9rem;
+  border-radius: .6rem; cursor: pointer; text-decoration: none;
+}
+.btn.secondary { background: transparent; color: var(--text); border:1px solid var(--border); }
+.btn.danger { background: var(--danger); }
+.btn.ok { background: var(--ok); }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: .6rem; border-bottom: 1px solid var(--border); }
+.badge { padding: .15rem .5rem; border-radius: 999px; font-size: .8rem; border:1px solid var(--border); }
+.badge-male { background: color-mix(in oklab, var(--male) 20%, transparent); color: #fff; border-color: color-mix(in oklab, var(--male) 60%, black); }
+.badge-female { background: color-mix(in oklab, var(--female) 20%, transparent); color: #fff; border-color: color-mix(in oklab, var(--female) 60%, black); }
+
+.badge-undefined {
+    background-color: #6a6a6a;
+    color: white;
+}
+
+.gallery { display:flex; gap:.6rem; flex-wrap: wrap; }
+.gallery img { max-height: 140px; border-radius: .6rem; border:1px solid var(--border); }
+.helper { color: var(--muted); font-size: .85rem; }
+hr { border: none; border-top:1px solid var(--border); margin: 1rem 0; }
+
+/* Correction pour le menu déroulant */
+select, select option {
+    background-color: var(--panel);
+    color: var(--text);
+}
+/* Fix for the select dropdown text color in light mode */
+body.light select,
+body.light select option {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+}
+
+/* Fix for the select dropdown text color in dark mode */
+body.dark select,
+body.dark select option {
+    background-color: #111827 !important;
+    color: #e5e7eb !important;
+}
+
+/* Removes the outline when the select element is focused, and sets a consistent border */
+select:focus {
+    outline: none;
+    border: 1px solid var(--accent);
+}
+
+/* Fallback for browsers that don't respond to the :focus pseudo-class */
+select, select:focus {
+    box-shadow: none;
+    outline: 0;
+}
+
+/* Fix for the select dropdown in light mode */
+body.light select,
+body.light select option {
+    background-color: var(--panel) !important;
+    color: var(--text) !important;
+}
+
+/* Fix for badges in light mode */
+body.light .badge-male {
+    background: color-mix(in oklab, var(--male) 20%, transparent);
+    color: var(--male);
+    border-color: var(--male);
+}
+
+body.light .badge-female {
+    background: color-mix(in oklab, var(--female) 20%, transparent);
+    color: var(--female);
+    border-color: var(--female);
+}
+
+body.light .badge-male:hover {
+    background: var(--male);
+    color: #fff;
+}
+
+body.light .badge-female:hover {
+    background: var(--female);
+    color: #fff;
+}
+
+/* Media query pour les petits écrans (smartphones) */
+@media (max-width: 600px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.snakes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.5rem 1rem; /* espacement lignes/colonnes */
+  margin-top: 0.5rem;
+}
+
+.snakes-grid label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+
+.snakes-grid input[type="checkbox"]:checked + span {
+  font-weight: bold;
+}
+
+.snakes-grid label:hover {
+  background: rgba(255,255,255,0.05);
+}

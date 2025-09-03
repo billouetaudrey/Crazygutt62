@@ -1,6 +1,6 @@
 # Pantherophis Guttatus — Suivi des serpents (PHP/MySQL)
 
-Un mini-site pour gérer des fiches de Pantherophis guttatus (corn snakes).
+Un mini-site pour gérer des fiches de Pantherophis guttatus (corn snakes). Créé à l'aide de chatgpt et gemini
 
 ## Fonctionnalités
 - Thème clair/sombre (bouton lune/soleil sur toutes les pages, mémorisé via localStorage).
@@ -10,12 +10,16 @@ Un mini-site pour gérer des fiches de Pantherophis guttatus (corn snakes).
 - Âge calculé automatiquement à partir de l'année de naissance.
 - Sexe coloré (bleu = mâle, rose = femelle).
 - Morph, poids (facultatif), commentaire libre.
+- Pontes, date d'éclosion théorique calculé automatiquement ( 60 jours )
+- Édition de serpent multiple
+- Affichage répartition des ages, répartition des types de repas
+- Alerte repas à +7 jours ( reset ignoré si " refus " )
 
 ## Structure
 ```
-pantherophis_tracker/
+guttata/
 ├─ config.php                  # Paramètres base de données (à éditer)
-├─ schema.sql                  # Script SQL de création des tables
+├─ guttata.sql                  # Script SQL de création des tables
 ├─ includes/
 │  ├─ db.php                   # Connexion PDO
 │  └─ functions.php            # Fonctions utilitaires
@@ -24,16 +28,29 @@ pantherophis_tracker/
    ├─ snake.php                # Fiche + édition + upload photos
    ├─ delete.php               # Suppression d'un serpent
    ├─ upload.php               # Traitement upload de photos
+   ├─ ajout_mue.php            # Ajout mue
+   ├─ ajout_ponte.php          # Ajout ponte
+   ├─ ajout_repas.php          # Ajout repas
+   ├─ bulk_edit_edit.php       # Modifier plusieurs serpents en même temps
+   ├─ delete_clutch.php        # Suppression d'une ponte
+   ├─ delete_feeding.php       # Suppression d'un repas
+   ├─ delete_photos.php        # Suppression d'une photo
+   ├─ delete_shed.php          # Suppression d'une mue
+   ├─ upload.php               # Traitement upload de photos
+   ├─ edit_snake.php           # Edition fiche serpent
+   ├─ gestion_donnees.php      # Export/Import, Reset
+   ├─ update_snake.php         # Mise a jour fiche serpent
    └─ assets/
       ├─ style.css             # Styles
       └─ theme.js              # Gestion du thème
-      └─ (uploads/)            # Dossier des images (écriture nécessaire)
+└─ (uploads/)            # Dossier des images (écriture nécessaire)
+
 ```
 
 ## Installation
 1. Copiez le dossier sur votre serveur (Apache/Nginx + PHP 8+).
 2. Créez une base MySQL/MariaDB et un utilisateur.
-3. Importez `schema.sql` dans la base.
+3. Importez `guttata.sql` dans la base.
 4. Éditez `config.php` avec vos identifiants (hôte, base, utilisateur, mot de passe).
 5. Assurez-vous que `public/uploads/` est **inscriptible** par PHP (ex: `chmod 775` ou `chmod 777` selon votre environnement).
 
@@ -48,3 +65,11 @@ pantherophis_tracker/
 - Les suppressions demandent une confirmation côté client (JS).
 
 Bon élevage 🐍
+
+<img width="1144" height="920" alt="image" src="https://github.com/user-attachments/assets/9266779a-d95c-4c89-8d08-14c61a384d88" />
+<img width="1199" height="922" alt="image" src="https://github.com/user-attachments/assets/15093cb1-2596-419c-b5e8-912535a0126f" />
+<img width="1143" height="911" alt="image" src="https://github.com/user-attachments/assets/f5351c2a-b107-4273-aa67-712f6cd3761b" />
+<img width="1115" height="356" alt="image" src="https://github.com/user-attachments/assets/8aa7791c-3e01-43fc-8f4b-f9b6265fcef8" />
+
+
+
