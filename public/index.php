@@ -96,7 +96,7 @@ try {
         }
     }
     
-    // Fonction pour générer les fiches de serpent
+    // Fonction pour générer les fiches de serpent avec cases à cocher
     function render_snake_cards($list, $pdo) {
         if (!$list) {
             return '<div class="helper">Aucun serpent dans cette catégorie.</div>';
@@ -104,26 +104,33 @@ try {
         ob_start();
         ?>
         <div class="snake-grid">
+            <label style="grid-column: 1 / -1; margin-bottom: 1rem; font-weight: bold;">
+                <input type="checkbox" class="select-all" id="select-all-<?= md5(json_encode($list)) ?>">
+                Sélectionner tout
+            </label>
             <?php foreach ($list as $s): 
                 $stmt = $pdo->prepare("SELECT filename FROM photos WHERE snake_id = ? ORDER BY uploaded_at DESC LIMIT 1");
                 $stmt->execute([$s['id']]);
                 $photo = $stmt->fetchColumn();
             ?>
-                <a class="snake-card" href="<?= base_url('snake.php?id=' . (int)$s['id']) ?>">
-                    <div class="snake-photo">
-                        <?php if ($photo): ?>
-                            <img src="<?= base_url('uploads/' . h($photo)) ?>" alt="Photo de <?= h($s['name']) ?>">
-                        <?php else: ?>
-                            <div class="no-photo">📸</div>
-                        <?php endif; ?>
-                    </div>
-                    <div class="snake-info">
-                        <h4 class="snake-name"><?= h($s['name']) ?></h4>
-                        <span class="snake-sex"><?= sex_badge($s['sex']) ?></span>
-                        <p class="snake-morph"><?= h($s['morph']) ?></p>
-                        <p class="snake-age"><?= compute_age_from_year((int)$s['birth_year']) ?> ans</p>
-                    </div>
-                </a>
+<div class="snake-card">
+                    <input type="checkbox" name="snake_ids[]" value="<?= (int)$s['id'] ?>" style="position: absolute; top: 10px; left: 10px; z-index: 10;">
+                    <a href="<?= base_url('snake.php?id=' . (int)$s['id']) ?>">
+                        <div class="snake-photo">
+                            <?php if ($photo): ?>
+                                <img src="<?= base_url('uploads/' . h($photo)) ?>" alt="Photo de <?= h($s['name']) ?>">
+                            <?php else: ?>
+                                <div class="no-photo">📸</div>
+                            <?php endif; ?>
+                        </div>
+                        <div class="snake-info">
+                            <h4 class="snake-name"><?= h($s['name']) ?></h4>
+                            <span class="snake-sex"><?= sex_badge($s['sex']) ?></span>
+                            <p class="snake-morph"><?= h($s['morph']) ?></p>
+                            <p class="snake-age"><?= compute_age_from_year((int)$s['birth_year']) ?> ans</p>
+                        </div>
+                    </a>
+                </div>
             <?php endforeach; ?>
         </div>
         <?php
@@ -194,6 +201,7 @@ try {
                         <a class="btn secondary" href="<?= base_url('edit_snake.php?id=' . (int)$s['id']) ?>">Éditer</a>
                         <form method="post" action="delete.php" onsubmit="return confirm('Supprimer définitivement ce serpent ?');">
                             <input type="hidden" name="id" value="<?= (int)$s['id'] ?>">
+                            <button class="btn danger" type="submit">🗑</button>
                         </form>
                     </td>
                 </tr>
@@ -321,30 +329,40 @@ try {
     </div>
 
     <div class="card">
-        <h2>Mes serpents</h2>
-        <?php if (!$snakes): ?>
-            <div class="helper">Aucun serpent pour l'instant.</div>
-        <?php else: ?>
+<div class="card">
+    <h2>Mes serpents</h2>
+    <?php if (!$snakes): ?>
+        <div class="helper">Aucun serpent pour l'instant.</div>
+    <?php else: ?>
+        <details>
+            <summary><h3>🐍 Bébés (< 1 an) (<?= count($babies) ?>)</h3></summary>
             <form method="get" action="bulk_edit_snakes.php">
-                <details>
-                    <summary><h3>🐍 Bébés (< 1 an) (<?= count($babies) ?>)</h3></summary>
-                    <?= render_snake_table($babies, $pdo) ?>
-                </details>
-                <details style="margin-top:1rem;">
-                    <summary><h3>🟠 Sub-adultes (1–2 ans) (<?= count($subadults) ?>)</h3></summary>
-                    <?= render_snake_cards($subadults, $pdo) ?>
-                </details>
-                <details style="margin-top:1rem;">
-                    <summary><h3>🟢 Adultes (> 2 ans) (<?= count($adults) ?>)</h3></summary>
-                    <?= render_snake_cards($adults, $pdo) ?>
-                </details>
+                <?= render_snake_table($babies, $pdo) ?>
                 <div style="margin-top:1rem;">
-                    <button type="submit" class="btn secondary">Éditer la sélection</button>
+                    <button type="submit" class="btn secondary">Éditer les bébés</button>
                 </div>
             </form>
-        <?php endif; ?>
-    </div>
-    
+        </details>
+        <details style="margin-top:1rem;">
+            <summary><h3>🟠 Sub-adultes (1–2 ans) (<?= count($subadults) ?>)</h3></summary>
+            <form method="get" action="bulk_edit_snakes.php">
+                <?= render_snake_cards($subadults, $pdo) ?>
+                <div style="margin-top:1rem;">
+                    <button type="submit" class="btn secondary">Éditer les sub-adultes</button>
+                </div>
+            </form>
+        </details>
+        <details style="margin-top:1rem;">
+            <summary><h3>🟢 Adultes (> 2 ans) (<?= count($adults) ?>)</h3></summary>
+            <form method="get" action="bulk_edit_snakes.php">
+                <?= render_snake_cards($adults, $pdo) ?>
+                <div style="margin-top:1rem;">
+                    <button type="submit" class="btn secondary">Éditer les adultes</button>
+                </div>
+            </form>
+        </details>
+    <?php endif; ?>
+</div>    
     <div class="card">
         <h3>Pontes</h3>
         <a class="btn" href="ajout_ponte.php">+ Ajouter ponte</a>
@@ -401,17 +419,45 @@ try {
         </div>
     </div>
 </div>
+
 <script>
-    // Script pour sélectionner/désélectionner toutes les cases
     document.addEventListener('DOMContentLoaded', () => {
-        const selectAllCheckboxes = document.querySelectorAll('.select-all');
-        selectAllCheckboxes.forEach(checkbox => {
+        // Gère la sélection de toutes les checkboxes dans une table (pour les bébés)
+        const selectAllTables = document.querySelectorAll('table .select-all');
+        selectAllTables.forEach(checkbox => {
             checkbox.addEventListener('change', (e) => {
                 const table = e.target.closest('table');
                 const checkboxes = table.querySelectorAll('tbody input[type="checkbox"]');
                 checkboxes.forEach(cb => {
                     cb.checked = e.target.checked;
                 });
+            });
+        });
+
+        // Gère la sélection de toutes les checkboxes dans une grille de cartes (pour sub-adultes et adultes)
+        const selectAllGrids = document.querySelectorAll('.snake-grid .select-all');
+        selectAllGrids.forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                const grid = e.target.closest('.snake-grid');
+                const checkboxes = grid.querySelectorAll('input[type="checkbox"][name="snake_ids[]"]');
+                checkboxes.forEach(cb => {
+                    cb.checked = e.target.checked;
+                });
+            });
+        });
+
+        // Gère le clic sur la carte pour basculer la checkbox
+        const snakeCards = document.querySelectorAll('.snake-card');
+        snakeCards.forEach(card => {
+            card.addEventListener('click', (e) => {
+                // Empêche le basculement si le clic est sur un lien ou la checkbox elle-même
+                if (e.target.closest('a') || e.target.type === 'checkbox') {
+                    return;
+                }
+                const checkbox = card.querySelector('input[type="checkbox"]');
+                if (checkbox) {
+                    checkbox.checked = !checkbox.checked;
+                }
             });
         });
     });
