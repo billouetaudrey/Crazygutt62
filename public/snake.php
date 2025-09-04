@@ -41,13 +41,19 @@ $shedsStmt = $pdo->prepare("SELECT * FROM sheds WHERE snake_id = ? ORDER BY date
 $shedsStmt->execute([$id]);
 $sheds = $shedsStmt->fetchAll();
 
-// NOUVEAU : Récupération des photos du serpent
+// Récupération des photos du serpent
 $photosStmt = $pdo->prepare("SELECT * FROM photos WHERE snake_id = ? ORDER BY uploaded_at DESC");
 $photosStmt->execute([$id]);
 $photos = $photosStmt->fetchAll();
 
-// Définir le chemin de base pour les uploads
+// Récupération de l'ID de la photo de profil actuelle
+$profilePhotoIdStmt = $pdo->prepare("SELECT profile_photo_id FROM snakes WHERE id = ?");
+$profilePhotoIdStmt->execute([$id]);
+$profilePhotoId = $profilePhotoIdStmt->fetchColumn();
+
+// Définir le chemin de base pour les uploads et les vignettes
 define('UPLOAD_DIR', 'uploads/');
+define('THUMB_DIR', 'uploads/thumbnails/');
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -68,16 +74,21 @@ define('UPLOAD_DIR', 'uploads/');
             border: 1px solid #ddd;
             padding: 5px;
             border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         .image-item img {
             max-width: 150px;
             height: auto;
             display: block;
         }
+        .image-item .actions {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+        }
         .image-item .delete-btn {
-            position: absolute;
-            top: 5px;
-            right: 5px;
             background-color: rgba(255, 0, 0, 0.7);
             color: white;
             border: none;
@@ -167,7 +178,7 @@ define('UPLOAD_DIR', 'uploads/');
         <input type="hidden" name="id" value="<?= (int)$snake['id'] ?>">
         <button type="submit" class="btn danger full-width">Supprimer le serpent</button>
     </form>
-</div>       
+</div>        
  </p>
     </div>
 
@@ -190,12 +201,25 @@ define('UPLOAD_DIR', 'uploads/');
             <div class="image-gallery">
                 <?php foreach ($photos as $photo): ?>
                     <div class="image-item">
-                        <img src="<?= base_url(UPLOAD_DIR . h($photo['filename'])) ?>" alt="Photo de <?= h($snake['name']) ?>">
-                        <form method="post" action="delete_photo.php" onsubmit="return confirm('Supprimer cette photo ?')">
-                            <input type="hidden" name="photo_id" value="<?= (int)$photo['id'] ?>">
-                            <input type="hidden" name="snake_id" value="<?= (int)$snake['id'] ?>">
-                            <button type="submit" class="delete-btn">X</button>
-                        </form>
+                        <a href="<?= base_url(UPLOAD_DIR . h($photo['filename'])) ?>" target="_blank">
+                            <img src="<?= base_url(THUMB_DIR . h($photo['filename'])) ?>" alt="Photo de <?= h($snake['name']) ?>">
+                        </a>
+                        <div class="actions">
+                            <?php if ($photo['id'] != $profilePhotoId): ?>
+                                <form method="post" action="set_profile_photo.php">
+                                    <input type="hidden" name="photo_id" value="<?= (int)$photo['id'] ?>">
+                                    <input type="hidden" name="snake_id" value="<?= (int)$snake['id'] ?>">
+                                    <button type="submit" class="btn primary">Définir comme profil</button>
+                                </form>
+                            <?php else: ?>
+                                <span class="btn ok">Photo de profil actuelle</span>
+                            <?php endif; ?>
+                            <form method="post" action="delete_photo.php" onsubmit="return confirm('Supprimer cette photo ?')">
+                                <input type="hidden" name="photo_id" value="<?= (int)$photo['id'] ?>">
+                                <input type="hidden" name="snake_id" value="<?= (int)$snake['id'] ?>">
+                                <button type="submit" class="delete-btn">X</button>
+                            </form>
+                        </div>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -252,6 +276,7 @@ define('UPLOAD_DIR', 'uploads/');
     <div class="card">
         <h3>Mues</h3>
         <a class="btn" href="ajout_mue.php?snake_id=<?= (int)$snake['id'] ?>">+ Ajouter une mue</a>
+        
         <?php if ($sheds): ?>
             <div style="overflow:auto;">
                 <table>
@@ -259,6 +284,7 @@ define('UPLOAD_DIR', 'uploads/');
                         <tr>
                             <th>Date</th>
                             <th>Qualité</th>
+                            <th>Commentaire</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -267,6 +293,7 @@ define('UPLOAD_DIR', 'uploads/');
                             <tr>
                                 <td><?= date('d/m/Y', strtotime($s['date'])) ?></td>
                                 <td><?= h($s['quality']) ?: 'N/A' ?></td>
+                                <td><?= h($s['comment']) ?: 'N/A' ?></td>
                                 <td style="display:flex;gap:.4rem;">
                                     <form method="post" action="delete_shed.php" onsubmit="return confirm('Supprimer cette mue ?')">
                                         <input type="hidden" name="id" value="<?= (int)$s['id'] ?>">
@@ -286,4 +313,3 @@ define('UPLOAD_DIR', 'uploads/');
 </div>
 </body>
 </html>
-
