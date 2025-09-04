@@ -68,7 +68,6 @@ guttata/
 Bon élevage 🐍
 
 <img width="1144" height="920" alt="image" src="https://github.com/user-attachments/assets/9266779a-d95c-4c89-8d08-14c61a384d88" />
-<img width="1199" height="922" alt="image" src="https://github.com/user-attachments/assets/15093cb1-2596-419c-b5e8-912535a0126f" />
 <img width="1143" height="911" alt="image" src="https://github.com/user-attachments/assets/f5351c2a-b107-4273-aa67-712f6cd3761b" />
 <img width="1115" height="356" alt="image" src="https://github.com/user-attachments/assets/8aa7791c-3e01-43fc-8f4b-f9b6265fcef8" />
 <img width="1141" height="755" alt="image" src="https://github.com/user-attachments/assets/9f13a245-1fac-4424-bf76-5fd145088e1d" />
