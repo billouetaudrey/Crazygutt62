@@ -77,6 +77,134 @@ try {
     $clutchesStmt->execute();
     $clutches = $clutchesStmt->fetchAll();
 
+    // Sépare les serpents par catégorie d'âge et récupère la dernière photo
+    $now = (int)(new DateTime())->format('Y');
+    $babies = [];
+    $subadults = [];
+    $adults = [];
+
+    foreach ($snakes as $s) {
+        if (!$s['birth_year'] || $s['birth_year'] == '0000') continue;
+        $age = $now - (int)$s['birth_year'];
+
+        if ($age < 1) {
+            $babies[] = $s;
+        } elseif ($age >= 1 && $age < 2) {
+            $subadults[] = $s;
+        } else {
+            $adults[] = $s;
+        }
+    }
+    
+    // Fonction pour générer les fiches de serpent
+    function render_snake_cards($list, $pdo) {
+        if (!$list) {
+            return '<div class="helper">Aucun serpent dans cette catégorie.</div>';
+        }
+        ob_start();
+        ?>
+        <div class="snake-grid">
+            <?php foreach ($list as $s): 
+                $stmt = $pdo->prepare("SELECT filename FROM photos WHERE snake_id = ? ORDER BY uploaded_at DESC LIMIT 1");
+                $stmt->execute([$s['id']]);
+                $photo = $stmt->fetchColumn();
+            ?>
+                <a class="snake-card" href="<?= base_url('snake.php?id=' . (int)$s['id']) ?>">
+                    <div class="snake-photo">
+                        <?php if ($photo): ?>
+                            <img src="<?= base_url('uploads/' . h($photo)) ?>" alt="Photo de <?= h($s['name']) ?>">
+                        <?php else: ?>
+                            <div class="no-photo">📸</div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="snake-info">
+                        <h4 class="snake-name"><?= h($s['name']) ?></h4>
+                        <span class="snake-sex"><?= sex_badge($s['sex']) ?></span>
+                        <p class="snake-morph"><?= h($s['morph']) ?></p>
+                        <p class="snake-age"><?= compute_age_from_year((int)$s['birth_year']) ?> ans</p>
+                    </div>
+                </a>
+            <?php endforeach; ?>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+    
+    // Petite fonction pour générer le tableau des bébés
+    function render_snake_table($list, $pdo) {
+        if (!$list) {
+            return '<div class="helper">Aucun serpent dans cette catégorie.</div>';
+        }
+        ob_start();
+        ?>
+        <div style="overflow:auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th><input type="checkbox" class="select-all"></th>
+                    <th>Nom</th>
+                    <th>Sexe</th>
+                    <th>Phase</th>
+                    <th>Âge</th>
+                    <th>Dernier repas</th>
+                    <th>Jours écoulés</th>
+                    <th>Repas pris</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($list as $s): ?>
+                <?php
+                $last_date = '-';
+                $days_since_meal = '-';
+                $alert_icon = '<span style="color:red;font-size:1rem;">⚠️</span>';
+
+                $q = $pdo->prepare("SELECT MAX(date) AS last_date FROM feedings WHERE snake_id=? AND refused=0");
+                $q->execute([$s['id']]);
+                $lastMeal = $q->fetch();
+
+                if ($lastMeal['last_date']) {
+                    $last_date = $lastMeal['last_date'];
+                    $days_since_meal = (new DateTime($last_date))->diff(new DateTime())->days;
+                    if ($days_since_meal <= 7) {
+                        $alert_icon = '';
+                    }
+                }
+                ?>
+                <tr>
+                    <td><input type="checkbox" name="snake_ids[]" value="<?= (int)$s['id'] ?>"></td>
+                    <td><?= h($s['name']) ?></td>
+                    <td><?= sex_badge($s['sex']) ?></td>
+                    <td><?= h($s['morph']) ?></td>
+                    <td><?= compute_age_from_year((int)$s['birth_year']) ?> ans</td>
+                    <td>
+                        <?php if ($last_date && $last_date !== '-'): ?>
+                            <?= date('d/m/Y', strtotime($last_date)) ?>
+                        <?php else: ?>
+                            <?= $last_date ?>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <?= $days_since_meal ?>
+                        <?= $alert_icon ?>
+                    </td>
+                    <td><?= (int)$s['meal_count'] ?></td>
+                    <td style="display:flex;gap:.4rem;">
+                        <a class="btn" href="<?= base_url('snake.php?id=' . (int)$s['id']) ?>">Ouvrir</a>
+                        <a class="btn secondary" href="<?= base_url('edit_snake.php?id=' . (int)$s['id']) ?>">Éditer</a>
+                        <form method="post" action="delete.php" onsubmit="return confirm('Supprimer définitivement ce serpent ?');">
+                            <input type="hidden" name="id" value="<?= (int)$s['id'] ?>">
+                        </form>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+
 } catch (PDOException $e) {
     // Displays a database connection error
     die("Erreur de connexion à la base de données : " . $e->getMessage());
@@ -197,108 +325,23 @@ try {
         <?php if (!$snakes): ?>
             <div class="helper">Aucun serpent pour l'instant.</div>
         <?php else: ?>
-            <?php
-            // Séparer bébés et autres
-            $now = new DateTime();
-            $babies = [];
-            $others = [];
-            foreach ($snakes as $s) {
-                $age = $s['birth_year'] ? (int)$now->format('Y') - (int)$s['birth_year'] : 0;
-                if ($age < 1) {
-                    $babies[] = $s;
-                } else {
-                    $others[] = $s;
-                }
-            }
-            // Petite fonction pour générer le tableau
-            function render_snake_table($list, $pdo) {
-                if (!$list) {
-                    return '<div class="helper">Aucun serpent dans cette catégorie.</div>';
-                }
-                ob_start();
-                ?>
-                <div style="overflow:auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th><input type="checkbox" class="select-all"></th>
-                            <th>Nom</th>
-                            <th>Sexe</th>
-                            <th>Phase</th>
-                            <th>Âge</th>
-                            <th>Dernier repas</th>
-                            <th>Jours écoulés</th>
-                            <th>Repas pris</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    <?php foreach ($list as $s): ?>
-                        <?php
-                        // Initialisation des variables pour éviter les "Undefined variable"
-                        $last_date = '-';
-                        $days_since_meal = '-';
-                        $alert_icon = '<span style="color:red;font-size:1rem;">⚠️</span>'; // icône par défaut si aucun repas
-
-                        $q = $pdo->prepare("SELECT MAX(date) AS last_date FROM feedings WHERE snake_id=? AND refused=0");
-                        $q->execute([$s['id']]);
-                        $lastMeal = $q->fetch();
-
-                        if ($lastMeal['last_date']) {
-                            $last_date = $lastMeal['last_date'];
-                            $days_since_meal = (new DateTime($last_date))->diff(new DateTime())->days;
-                            if ($days_since_meal <= 7) {
-                                $alert_icon = '';
-                            }
-                        }
-                        ?>
-                        <tr>
-                            <td><input type="checkbox" name="snake_ids[]" value="<?= (int)$s['id'] ?>"></td>
-                            <td><?= h($s['name']) ?></td>
-                            <td><?= sex_badge($s['sex']) ?></td>
-                            <td><?= h($s['morph']) ?></td>
-                            <td><?= compute_age_from_year((int)$s['birth_year']) ?> ans</td>
-                            <td>
-                                <?php if ($last_date && $last_date !== '-'): ?>
-                                    <?= date('d/m/Y', strtotime($last_date)) ?>
-                                <?php else: ?>
-                                    <?= $last_date ?>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <?= $days_since_meal ?>
-                                <?= $alert_icon ?>
-                            </td>
-                            <td><?= (int)$s['meal_count'] ?></td>
-                            <td style="display:flex;gap:.4rem;">
-                                <a class="btn" href="<?= base_url('snake.php?id=' . (int)$s['id']) ?>">Ouvrir</a>
-                                <a class="btn secondary" href="<?= base_url('edit_snake.php?id=' . (int)$s['id']) ?>">Éditer</a>
-                                <form method="post" action="delete.php" onsubmit="return confirm('Supprimer définitivement ce serpent ?');">
-                                    <input type="hidden" name="id" value="<?= (int)$s['id'] ?>">
-                                </form>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                    </tbody>
-                </table>
+            <form method="get" action="bulk_edit_snakes.php">
+                <details>
+                    <summary><h3>🐍 Bébés (< 1 an) (<?= count($babies) ?>)</h3></summary>
+                    <?= render_snake_table($babies, $pdo) ?>
+                </details>
+                <details style="margin-top:1rem;">
+                    <summary><h3>🟠 Sub-adultes (1–2 ans) (<?= count($subadults) ?>)</h3></summary>
+                    <?= render_snake_cards($subadults, $pdo) ?>
+                </details>
+                <details style="margin-top:1rem;">
+                    <summary><h3>🟢 Adultes (> 2 ans) (<?= count($adults) ?>)</h3></summary>
+                    <?= render_snake_cards($adults, $pdo) ?>
+                </details>
+                <div style="margin-top:1rem;">
+                    <button type="submit" class="btn secondary">Éditer la sélection</button>
                 </div>
-                <?php
-                return ob_get_clean();
-            }
-            ?>
-        <form method="get" action="bulk_edit_snakes.php">
-            <details>
-                <summary><h3>🐍 Bébés (< 1 an) (<?= $baby ?>)</h3></summary>
-                <?= render_snake_table($babies, $pdo) ?>
-            </details>
-            <details style="margin-top:1rem;">
-                <summary><h3>🐍 Sub-adultes + Adultes (≥ 1 an) (<?= $sub + $adult ?>)</h3></summary>
-                <?= render_snake_table($others, $pdo) ?>
-            </details>
-            <div style="margin-top:1rem;">
-                <button type="submit" class="btn secondary">Éditer la sélection</button>
-            </div>
-        </form>
+            </form>
         <?php endif; ?>
     </div>
     
