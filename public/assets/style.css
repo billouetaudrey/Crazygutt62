@@ -1,11 +1,10 @@
-
 /* Style des menus déroulants */
 select {
     padding: 6px 10px;
     border-radius: 8px;
     border: 1px solid #555;
     background-color: var(--bg-color, #222); /* fond selon ton thème */
-    color: var(--text-color, #fff);          /* texte visible */
+    color: var(--text-color, #fff);           /* texte visible */
     font-size: 14px;
     cursor: pointer;
 }
@@ -195,26 +194,211 @@ body.light .badge-female:hover {
 }
 
 .snakes-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 0.5rem 1rem; /* espacement lignes/colonnes */
-  margin-top: 0.5rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.5rem 1rem; /* espacement lignes/colonnes */
+    margin-top: 0.5rem;
 }
 
 .snakes-grid label {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.3rem 0.6rem;
-  border-radius: 6px;
-  transition: background 0.2s;
-  cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 6px;
+    transition: background 0.2s;
+    cursor: pointer;
 }
 
 .snakes-grid input[type="checkbox"]:checked + span {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .snakes-grid label:hover {
-  background: rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.05);
 }
+
+
+/* Style de base pour chaque carte de serpent */
+.snake-card {
+    display: inline-block; /* important pour columns */
+    width: 100%;
+    margin-bottom: 1.5rem;
+    break-inside: avoid;   /* évite les coupures moches */
+}
+
+.snake-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.snake-card-image {
+    width: 100%;
+    height: 200px;
+    background-color: #f0f0f0; /* Couleur de fond temporaire */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.snake-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.snake-card-content {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    flex: 1;
+}
+
+.snake-card-content h3 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    color: var(--primary-color);
+}
+
+.snake-card-content p {
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+    line-height: 1.4;
+}
+
+.snake-card .alerts {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 1rem 0;
+    font-size: 0.85rem;
+}
+
+.snake-card .alerts li {
+    padding: 0.2rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.snake-card-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.snake-card-actions .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    margin-top: 0;
+}
+
+/* Conteneur des cartes corrigé */
+.snake-cards-container {
+    column-count: 3;       /* nombre de colonnes */
+    column-gap: 1.5rem;    /* espace entre colonnes */
+    padding: 1rem;
+}
+
+@media (max-width: 1024px) {
+    .snake-cards-container {
+        column-count: 2;
+    }
+}
+
+@media (max-width: 600px) {
+    .snake-cards-container {
+        column-count: 1;
+    }
+}
+
+.snake-card a {
+    color: inherit !important;
+    text-decoration: none !important;
+}
+
+.snake-card a:hover {
+    color: #1e90ff !important;  /* ou la couleur que tu veux au hover */
+    text-decoration: underline;
+}
+
+
+
+.snake-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 1rem;
+}
+
+.snake-card {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    overflow: hidden;
+    text-decoration: none;
+    color: var(--text);
+    background: var(--panel);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.snake-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.snake-photo {
+    width: 100%;
+    height: 150px;
+    background-color: var(--border);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.snake-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.snake-photo .no-photo {
+    font-size: 3rem;
+    color: var(--muted);
+}
+
+.snake-info {
+    padding: 1rem;
+    text-align: center;
+}
+
+.snake-name {
+    margin: 0 0 0.25rem;
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.snake-sex {
+    display: inline-block;
+    padding: 0.2em 0.6em;
+    border-radius: 0.5rem;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+.snake-morph {
+    margin: 0.25rem 0;
+    color: var(--muted);
+    font-size: 0.9em;
+}
+
+.snake-age {
+    margin: 0.25rem 0 0;
+    font-weight: normal;
+    font-size: 0.9em;
+}
+
+/* Styles pour les badges de sexe existants */
+.male-badge { background-color: var(--male); color: white; padding: .2em .6em; border-radius: .5rem; }
+.female-badge { background-color: var(--female); color: white; padding: .2em .6em; border-radius: .5rem; }
+.undefined-badge { background-color: var(--muted); color: white; padding: .2em .6em; border-radius: .5rem; }
