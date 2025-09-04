@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : localhost
--- Généré le : mer. 03 sep. 2025 à 13:16
+-- Généré le : jeu. 04 sep. 2025 à 16:17
 -- Version du serveur : 10.11.13-MariaDB-0ubuntu0.24.04.1
 -- Version de PHP : 8.3.6
 
@@ -52,7 +52,9 @@ CREATE TABLE `feedings` (
   `refused` tinyint(1) NOT NULL DEFAULT 0,
   `comment` text DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `dernier_repas` date DEFAULT NULL
+  `dernier_repas` date DEFAULT NULL,
+  `type` varchar(50) NOT NULL DEFAULT 'repas',
+  `value` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -65,7 +67,8 @@ CREATE TABLE `photos` (
   `id` int(11) NOT NULL,
   `snake_id` int(11) NOT NULL,
   `filename` varchar(255) NOT NULL,
-  `created_at` timestamp NULL DEFAULT current_timestamp()
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `uploaded_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -99,7 +102,21 @@ CREATE TABLE `snakes` (
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `default_meal_type` varchar(50) DEFAULT NULL,
-  `meal_type` varchar(50) NOT NULL DEFAULT 'inconnu'
+  `meal_type` varchar(50) NOT NULL DEFAULT 'inconnu',
+  `profile_photo_id` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `snake_images`
+--
+
+CREATE TABLE `snake_images` (
+  `id` int(11) NOT NULL,
+  `snake_id` int(11) NOT NULL,
+  `filename` varchar(255) NOT NULL,
+  `uploaded_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -142,6 +159,13 @@ ALTER TABLE `snakes`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Index pour la table `snake_images`
+--
+ALTER TABLE `snake_images`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `snake_id` (`snake_id`);
+
+--
 -- AUTO_INCREMENT pour les tables déchargées
 --
 
@@ -176,6 +200,12 @@ ALTER TABLE `snakes`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT pour la table `snake_images`
+--
+ALTER TABLE `snake_images`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- Contraintes pour les tables déchargées
 --
 
@@ -203,6 +233,12 @@ ALTER TABLE `photos`
 --
 ALTER TABLE `sheds`
   ADD CONSTRAINT `sheds_ibfk_1` FOREIGN KEY (`snake_id`) REFERENCES `snakes` (`id`) ON DELETE CASCADE;
+
+--
+-- Contraintes pour la table `snake_images`
+--
+ALTER TABLE `snake_images`
+  ADD CONSTRAINT `snake_images_ibfk_1` FOREIGN KEY (`snake_id`) REFERENCES `snakes` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
