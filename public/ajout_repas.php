@@ -15,12 +15,21 @@ foreach ($snakesByMealType as $s) {
     $groupedSnakes[$mealType][] = $s;
 }
 
+// Récupérer l'ID du serpent depuis l'URL si elle est présente
+$preselectedSnakeId = isset($_GET['snake_id']) ? (int)$_GET['snake_id'] : null;
+
 $done = false;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Récupérer les IDs des serpents cochés
     $snake_ids = $_POST['snakes'] ?? [];
-    // Récupérer l'ID du serpent présélectionné si il a été passé via l'URL et le formulaire
-    if (isset($_POST['preselected_snake_id']) && !in_array($_POST['preselected_snake_id'], $snake_ids)) {
-        $snake_ids[] = $_POST['preselected_snake_id'];
+    
+    // Ajouter l'ID du serpent pré-sélectionné si il a été envoyé via le champ caché
+    if (isset($_POST['preselected_snake_id'])) {
+        $preselectedId = (int)$_POST['preselected_snake_id'];
+        // On s'assure qu'il n'est pas déjà dans le tableau pour éviter les doublons
+        if (!in_array($preselectedId, $snake_ids)) {
+            $snake_ids[] = $preselectedId;
+        }
     }
 
     $date = $_POST['date'] ?? date('Y-m-d');
@@ -37,10 +46,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $done = true;
     }
 }
-
-// Récupérer l'ID du serpent depuis l'URL si elle est présente
-$preselectedSnakeId = isset($_GET['snake_id']) ? (int)$_GET['snake_id'] : null;
-
 ?>
 <!DOCTYPE html>
 <html lang="fr">
