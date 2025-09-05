@@ -62,6 +62,7 @@ define('THUMB_DIR', 'uploads/thumbnails/');
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= h($snake['name']) ?> — Suivi</title>
     <link rel="stylesheet" href="assets/style.css">
+    <script src="assets/theme.js" defer></script>
     <style>
         .image-gallery {
             display: flex;
