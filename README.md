@@ -15,6 +15,7 @@ Compatible smartphone (Testé sur chrome Andeoid uniquement)
 - Édition de serpent multiple
 - Affichage répartition des ages, répartition des types de repas
 - Alerte repas à +7 jours ( reset ignoré si " refus " )
+- Page statistiques ( globale, par catégories de serpent ( adulte sub bébé ), par serpent )
 
 ## Structure
 ```
@@ -41,6 +42,7 @@ guttata/
    ├─ edit_snake.php           # Edition fiche serpent
    ├─ gestion_donnees.php      # Export/Import, Reset
    ├─ update_snake.php         # Mise a jour fiche serpent
+   ├─ stats.php                # Statistiques     
    └─ assets/
       ├─ style.css             # Styles
       └─ theme.js              # Gestion du thème
