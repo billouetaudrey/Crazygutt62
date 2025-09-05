@@ -247,6 +247,7 @@ try {
         <button class="theme-toggle" onclick="toggleTheme()" title="Basculer thème">🌙/☀️</button> 
         <div style="margin-top:1rem; text-align:right;"> 
             <a class="btn secondary" href="gestion_donnees.php">⚙️ Gestion des données</a> 
+            <a class="btn secondary" href="stats.php">📊 Statistiques</a>        
         </div> 
     </div> 
      
