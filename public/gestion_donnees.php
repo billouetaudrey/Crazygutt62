@@ -8,7 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (isset($_POST['export'])) {
         // Export JSON libre
-        $tables = ['snakes','photos','feedings','sheds','clutches'];
+        $tables = ['snakes','clutches','feedings','photos','sheds','snake_images'];
         $data = [];
         foreach ($tables as $t) {
             $data[$t] = $pdo->query("SELECT * FROM $t")->fetchAll(PDO::FETCH_ASSOC);
@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 if ($_POST['password'] !== ADMIN_PASSWORD) {
             $message = "❌ Mot de passe incorrect.";
         } else {
-            $tables = ['clutches','sheds','feedings','photos','snakes'];
+            $tables = ['snakes','clutches','feedings','photos','sheds','snake_images'];
             foreach ($tables as $t) { $pdo->exec("DELETE FROM $t"); }
             $message = "✅ Toutes les données ont été supprimées.";
         }
