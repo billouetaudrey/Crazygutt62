@@ -402,3 +402,18 @@ body.light .badge-female:hover {
 .male-badge { background-color: var(--male); color: white; padding: .2em .6em; border-radius: .5rem; }
 .female-badge { background-color: var(--female); color: white; padding: .2em .6em; border-radius: .5rem; }
 .undefined-badge { background-color: var(--muted); color: white; padding: .2em .6em; border-radius: .5rem; }
+
+/* Styles alertes repas +7j haut index */
+.card.alert {
+    padding: 1rem;
+    border-left: 5px solid var(--warning);
+    background-color: var(--warning-light);
+    color: #000000; /* Ajout/Modification: Force le texte en noir */
+    margin-bottom: 1rem;
+    font-weight: bold;
+    border-radius: var(--border-radius, 8px); /* Ajout: pour les coins arrondis */
+}
+.card.alert.warning {
+    border-color: #ffc107; /* Jaune orangé */
+    background-color: #fff3cd; /* Fond jaune très clair */
+} 
