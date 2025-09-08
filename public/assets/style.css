@@ -1,4 +1,4 @@
-/* Style des menus déroulants */
+*/* Style des menus déroulants */
 select {
     padding: 6px 10px;
     border-radius: 8px;
@@ -225,6 +225,21 @@ body.light .badge-female:hover {
     width: 100%;
     margin-bottom: 1.5rem;
     break-inside: avoid;   /* évite les coupures moches */
+    position: relative; /* Indispensable pour positionner le badge */
+
+}
+
+.card-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #ffc107; /* Jaune orangé */
+    color: #000000;
+    padding: 5px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 0.8em;
+    z-index: 10;
 }
 
 .snake-card:hover {
@@ -403,7 +418,8 @@ body.light .badge-female:hover {
 .female-badge { background-color: var(--female); color: white; padding: .2em .6em; border-radius: .5rem; }
 .undefined-badge { background-color: var(--muted); color: white; padding: .2em .6em; border-radius: .5rem; }
 
-/* Styles alertes repas +7j haut index */
+/* Styles alertes haut index */
+
 .card.alert {
     padding: 1rem;
     border-left: 5px solid var(--warning);
