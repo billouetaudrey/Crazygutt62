@@ -83,6 +83,11 @@ try {
     $subadults = []; 
     $adults = []; 
 
+    // Ajout des drapeaux pour les alertes
+    $alert_hungry_baby = false;
+    $alert_hungry_subadult = false;
+    $alert_hungry_adult = false;
+
     // Récupère les serpents avec leur photo de profil ou la dernière photo
     $snakesWithPhotos = [];
     foreach ($snakes as $s) {
@@ -99,20 +104,33 @@ try {
         }
         $s['photo'] = $photo;
         $snakesWithPhotos[] = $s;
+
+        // Déplacez ici la vérification de la dernière date de repas
+        $q = $pdo->prepare("SELECT MAX(date) AS last_date FROM feedings WHERE snake_id=? AND refused=0");
+        $q->execute([$s['id']]);
+        $lastMeal = $q->fetch();
+        $days_since_meal = null;
+        if ($lastMeal['last_date']) {
+            $days_since_meal = (new DateTime($lastMeal['last_date']))->diff(new DateTime())->days;
+        }
+
+        if (!$s['birth_year'] || $s['birth_year'] == '0000') continue;
+        $age = $now - (int)$s['birth_year'];
+
+        // Vérifie si le serpent a besoin d'être nourri
+        $needs_feeding_alert = $days_since_meal !== null && $days_since_meal > 7;
+
+        if ($age < 1) {
+            $babies[] = $s;
+            if ($needs_feeding_alert) $alert_hungry_baby = true;
+        } elseif ($age >= 1 && $age < 2) {
+            $subadults[] = $s;
+            if ($needs_feeding_alert) $alert_hungry_subadult = true;
+        } else {
+            $adults[] = $s;
+            if ($needs_feeding_alert) $alert_hungry_adult = true;
+        }
     }
-
-    foreach ($snakesWithPhotos as $s) { 
-        if (!$s['birth_year'] || $s['birth_year'] == '0000') continue; 
-        $age = $now - (int)$s['birth_year']; 
-
-        if ($age < 1) { 
-            $babies[] = $s; 
-        } elseif ($age >= 1 && $age < 2) { 
-            $subadults[] = $s; 
-        } else { 
-            $adults[] = $s; 
-        } 
-    } 
      
     // Définir le chemin de base pour les vignettes
     define('THUMB_DIR', 'uploads/thumbnails/');
@@ -248,9 +266,27 @@ try {
         <div style="margin-top:1rem; text-align:right;"> 
             <a class="btn secondary" href="gestion_donnees.php">⚙️ Gestion des données</a> 
             <a class="btn secondary" href="stats.php">📊 Statistiques</a>        
+            <a class="btn secondary" href="https://www.morphmarket.com/c/reptiles/colubrids/corn-snakes/genetic-calculator/" target="_blank">🧬 Génétique</a>
+       
         </div> 
     </div> 
      
+    <?php if ($alert_hungry_baby): ?>
+        <div class="card alert warning">
+            ⚠️ Attention : au moins un bébé n'a pas mangé depuis plus de 7 jours !
+        </div>
+    <?php endif; ?>
+    <?php if ($alert_hungry_subadult): ?>
+        <div class="card alert warning">
+            ⚠️ Attention : au moins un sub-adulte n'a pas mangé depuis plus de 7 jours !
+        </div>
+    <?php endif; ?>
+    <?php if ($alert_hungry_adult): ?>
+        <div class="card alert warning">
+            ⚠️ Attention : au moins un adulte n'a pas mangé depuis plus de 7 jours !
+        </div>
+    <?php endif; ?>
+
     <div class="card"> 
         <details> 
             <summary> 
