@@ -1,92 +1,92 @@
 <?php 
-try { 
-    require_once __DIR__ . '/../includes/db.php'; 
-    require_once __DIR__ . '/../includes/functions.php'; 
+try {
+    require_once __DIR__ . '/../includes/db.php';
+    require_once __DIR__ . '/../includes/functions.php';
 
-    // Handle create snake form submission first 
-    $errors = []; 
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'create') { 
-        $name = trim($_POST['name'] ?? ''); 
-        $sex = $_POST['sex'] ?? 'M'; 
-        $morph = trim($_POST['morph'] ?? ''); 
-        $birth_year = (int)($_POST['birth_year'] ?? 0); 
-        $weight = $_POST['weight'] !== '' ? (float)$_POST['weight'] : null; 
-        $comment = trim($_POST['comment'] ?? ''); 
-        $default_meal_type = $_POST['default_meal_type'] ?? null; 
+    // Handle create snake form submission first
+    $errors = [];
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'create') {
+        $name = trim($_POST['name'] ?? '');
+        $sex = $_POST['sex'] ?? 'M';
+        $morph = trim($_POST['morph'] ?? '');
+        $birth_year = (int)($_POST['birth_year'] ?? 0);
+        $weight = $_POST['weight'] !== '' ? (float)$_POST['weight'] : null;
+        $comment = trim($_POST['comment'] ?? '');
+        $default_meal_type = $_POST['default_meal_type'] ?? null;
 
-        if ($name === '') $errors[] = 'Le nom est requis.'; 
-        if (!is_valid_year($birth_year)) $errors[] = 'Année de naissance invalide.'; 
+        if ($name === '') $errors[] = 'Le nom est requis.';
+        if (!is_valid_year($birth_year)) $errors[] = 'Année de naissance invalide.';
 
-        if (!$errors) { 
-            $stmt = $pdo->prepare('INSERT INTO snakes (name, sex, morph, birth_year, weight, comment, default_meal_type) VALUES (?, ?, ?, ?, ?, ?, ?)'); 
-            $stmt->execute([$name, $sex, $morph, $birth_year, $weight, $comment ?: null, $default_meal_type]); 
-            header('Location: ' . base_url('index.php')); 
-            exit; 
-        } 
-    } 
+        if (!$errors) {
+            $stmt = $pdo->prepare('INSERT INTO snakes (name, sex, morph, birth_year, weight, comment, default_meal_type) VALUES (?, ?, ?, ?, ?, ?, ?)');
+            $stmt->execute([$name, $sex, $morph, $birth_year, $weight, $comment ?: null, $default_meal_type]);
+            header('Location: ' . base_url('index.php'));
+            exit;
+        }
+    }
 
     // Fetch all snakes, including the profile_photo_id
-    $snakes = $pdo->query(' 
-        SELECT 
-            s.*, 
-            COUNT(f.id) AS meal_count 
-        FROM 
-            snakes s 
-        LEFT JOIN 
-            feedings f ON s.id = f.snake_id AND f.refused = 0 
-        GROUP BY 
-            s.id 
-        ORDER BY 
-            s.created_at DESC 
-    ')->fetchAll(); 
+    $snakes = $pdo->query('
+        SELECT
+            s.*,
+            COUNT(f.id) AS meal_count
+        FROM
+            snakes s
+        LEFT JOIN
+            feedings f ON s.id = f.snake_id AND f.refused = 0
+        GROUP BY
+            s.id
+        ORDER BY
+            s.name * 1 ASC
+    ')->fetchAll();
 
-    // Comptage par tranche d'âge 
-    $now = new DateTime(); 
-    $baby = $sub = $adult = 0; 
-    foreach ($snakes as $s) { 
-        if (!$s['birth_year'] || $s['birth_year'] == '0000') continue; 
-        $age = (int)$now->format('Y') - (int)$s['birth_year']; 
-        if ($age < 1) { 
-            $baby++; 
-        } elseif ($age < 2) { 
-            $sub++; 
-        } else { 
-            $adult++; 
-        } 
-    } 
+    // Comptage par tranche d'âge
+    $now = new DateTime();
+    $baby = $sub = $adult = 0;
+    foreach ($snakes as $s) {
+        if (!$s['birth_year'] || $s['birth_year'] == '0000') continue;
+        $age = (int)$now->format('Y') - (int)$s['birth_year'];
+        if ($age < 1) {
+            $baby++;
+        } elseif ($age < 2) {
+            $sub++;
+        } else {
+            $adult++;
+        }
+    }
 
-    // Comptage par type de repas basé uniquement sur la table 'snakes' 
-    $mealCountsStmt = $pdo->prepare(" 
-        SELECT default_meal_type, COUNT(*) AS count 
-        FROM snakes 
-        WHERE default_meal_type IS NOT NULL AND default_meal_type != '' 
-        GROUP BY default_meal_type 
-    "); 
-    $mealCountsStmt->execute(); 
-    $mealCounts = $mealCountsStmt->fetchAll(PDO::FETCH_KEY_PAIR); 
-    $mealTypes = ['rosé', 'blanchon', 'sauteuse', 'adulte']; 
+    // Comptage par type de repas basé uniquement sur la table 'snakes'
+    $mealCountsStmt = $pdo->prepare("
+        SELECT default_meal_type, COUNT(*) AS count
+        FROM snakes
+        WHERE default_meal_type IS NOT NULL AND default_meal_type != ''
+        GROUP BY default_meal_type
+    ");
+    $mealCountsStmt->execute();
+    $mealCounts = $mealCountsStmt->fetchAll(PDO::FETCH_KEY_PAIR);
+    $mealTypes = ['rosé', 'blanchon', 'sauteuse', 'adulte'];
 
-    // Fetch all clutches (pontes) 
-    $clutchesStmt = $pdo->prepare(" 
-        SELECT c.*, sm.name AS male_name, sf.name AS female_name 
-        FROM clutches c 
-        LEFT JOIN snakes sm ON c.male_id = sm.id 
-        LEFT JOIN snakes sf ON c.female_id = sf.id 
-        ORDER BY c.lay_date DESC 
-    "); 
-    $clutchesStmt->execute(); 
-    $clutches = $clutchesStmt->fetchAll(); 
+    // Fetch all clutches (pontes)
+    $clutchesStmt = $pdo->prepare("
+        SELECT c.*, sm.name AS male_name, sf.name AS female_name
+        FROM clutches c
+        LEFT JOIN snakes sm ON c.male_id = sm.id
+        LEFT JOIN snakes sf ON c.female_id = sf.id
+        ORDER BY c.lay_date DESC
+    ");
+    $clutchesStmt->execute();
+    $clutches = $clutchesStmt->fetchAll();
 
-    // Sépare les serpents par catégorie d'âge et récupère la dernière photo 
-    $now = (int)(new DateTime())->format('Y'); 
-    $babies = []; 
-    $subadults = []; 
-    $adults = []; 
+    // Sépare les serpents par catégorie d'âge et récupère la dernière photo
+    // + Ajout des drapeaux d'alerte pour les repas
+    $now = (int)(new DateTime())->format('Y');
+    $babies = [];
+    $subadults = [];
+    $adults = [];
 
-    // Ajout des drapeaux pour les alertes
     $alert_hungry_baby = false;
-    $alert_hungry_subadult = false;
-    $alert_hungry_adult = false;
+    $alert_hungry_subadults = [];
+    $alert_hungry_adults = [];
 
     // Récupère les serpents avec leur photo de profil ou la dernière photo
     $snakesWithPhotos = [];
@@ -105,7 +105,7 @@ try {
         $s['photo'] = $photo;
         $snakesWithPhotos[] = $s;
 
-        // Déplacez ici la vérification de la dernière date de repas
+        // Vérification du dernier repas et de l'âge pour définir les alertes
         $q = $pdo->prepare("SELECT MAX(date) AS last_date FROM feedings WHERE snake_id=? AND refused=0");
         $q->execute([$s['id']]);
         $lastMeal = $q->fetch();
@@ -117,7 +117,6 @@ try {
         if (!$s['birth_year'] || $s['birth_year'] == '0000') continue;
         $age = $now - (int)$s['birth_year'];
 
-        // Vérifie si le serpent a besoin d'être nourri
         $needs_feeding_alert = $days_since_meal !== null && $days_since_meal > 7;
 
         if ($age < 1) {
@@ -125,13 +124,13 @@ try {
             if ($needs_feeding_alert) $alert_hungry_baby = true;
         } elseif ($age >= 1 && $age < 2) {
             $subadults[] = $s;
-            if ($needs_feeding_alert) $alert_hungry_subadult = true;
+            if ($needs_feeding_alert) $alert_hungry_subadults[] = $s['name'];
         } else {
             $adults[] = $s;
-            if ($needs_feeding_alert) $alert_hungry_adult = true;
+            if ($needs_feeding_alert) $alert_hungry_adults[] = $s['name'];
         }
     }
-     
+      
     // Définir le chemin de base pour les vignettes
     define('THUMB_DIR', 'uploads/thumbnails/');
 
@@ -144,9 +143,22 @@ try {
         ?> 
         <div class="snake-grid"> 
             <?php foreach ($list as $s):  ?> 
+                <?php
+                $q = $pdo->prepare("SELECT MAX(date) AS last_date FROM feedings WHERE snake_id=? AND refused=0");
+                $q->execute([$s['id']]);
+                $lastMeal = $q->fetch();
+                $days_since_meal = null;
+                if ($lastMeal['last_date']) {
+                    $days_since_meal = (new DateTime($lastMeal['last_date']))->diff(new DateTime())->days;
+                }
+                $needs_feeding_alert = $days_since_meal !== null && $days_since_meal > 7;
+                ?>
                 <div class="snake-card"> 
                     <input type="checkbox" name="snake_ids[]" value="<?= (int)$s['id'] ?>" style="position: absolute; top: 10px; left: 10px; z-index: 10;"> 
                     <a href="<?= base_url('snake.php?id=' . (int)$s['id']) ?>"> 
+                        <?php if ($needs_feeding_alert): ?>
+                            <div class="card-badge warning">+7 jours</div>
+                        <?php endif; ?>
                         <div class="snake-photo"> 
                             <?php if ($s['photo']): ?> 
                                 <img src="<?= base_url(THUMB_DIR . h($s['photo'])) ?>" alt="Photo de <?= h($s['name']) ?>"> 
@@ -167,7 +179,7 @@ try {
         <?php 
         return ob_get_clean(); 
     } 
-     
+      
     // Petite fonction pour générer le tableau des bébés 
     function render_snake_table($list, $pdo) { 
         if (!$list) { 
@@ -265,28 +277,37 @@ try {
         <button class="theme-toggle" onclick="toggleTheme()" title="Basculer thème">🌙/☀️</button> 
         <div style="margin-top:1rem; text-align:right;"> 
             <a class="btn secondary" href="gestion_donnees.php">⚙️ Gestion des données</a> 
-            <a class="btn secondary" href="stats.php">📊 Statistiques</a>        
+            <a class="btn secondary" href="stats.php">📊 Statistiques</a>          
             <a class="btn secondary" href="https://www.morphmarket.com/c/reptiles/colubrids/corn-snakes/genetic-calculator/" target="_blank">🧬 Génétique</a>
-       
+        
         </div> 
     </div> 
-     
+      
     <?php if ($alert_hungry_baby): ?>
         <div class="card alert warning">
             ⚠️ Attention : au moins un bébé n'a pas mangé depuis plus de 7 jours !
         </div>
     <?php endif; ?>
-    <?php if ($alert_hungry_subadult): ?>
+    <?php if (!empty($alert_hungry_subadults)): ?>
         <div class="card alert warning">
-            ⚠️ Attention : au moins un sub-adulte n'a pas mangé depuis plus de 7 jours !
+            ⚠️ Attention, ces sub-adultes n'ont pas mangé depuis plus de 7 jours :
+            <ul>
+                <?php foreach ($alert_hungry_subadults as $snake_name): ?>
+                    <li><?= h($snake_name) ?></li>
+                <?php endforeach; ?>
+            </ul>
         </div>
     <?php endif; ?>
-    <?php if ($alert_hungry_adult): ?>
+    <?php if (!empty($alert_hungry_adults)): ?>
         <div class="card alert warning">
-            ⚠️ Attention : au moins un adulte n'a pas mangé depuis plus de 7 jours !
+            ⚠️ Attention, ces adultes n'ont pas mangé depuis plus de 7 jours :
+            <ul>
+                <?php foreach ($alert_hungry_adults as $snake_name): ?>
+                    <li><?= h($snake_name) ?></li>
+                <?php endforeach; ?>
+            </ul>
         </div>
     <?php endif; ?>
-
     <div class="card"> 
         <details> 
             <summary> 
@@ -365,7 +386,7 @@ try {
             </div> 
         </div> 
     </div> 
-     
+      
     <div class="card" style="text-align:center;"> 
         <h2>Répartition par type de repas</h2> 
         <div style="display:flex; justify-content:space-around; margin-top:1rem;"> 
@@ -389,6 +410,7 @@ try {
                     <?= render_snake_table($babies, $pdo) ?> 
                     <div style="margin-top:1rem;"> 
                         <button type="submit" class="btn secondary">Éditer les bébés</button> 
+                        <button type="submit" formaction="bulk_repas.php?meal_type=rosé" class="btn secondary">Ajouter un repas</button>
                     </div> 
                 </form> 
             </details> 
@@ -402,6 +424,7 @@ try {
                     <?= render_snake_cards($subadults, $pdo) ?> 
                     <div style="margin-top:1rem;"> 
                         <button type="submit" class="btn secondary">Éditer les sub-adultes</button> 
+                        <button type="submit" formaction="bulk_repas.php?meal_type=sauteuse" class="btn secondary">Ajouter un repas</button>
                     </div> 
                 </form> 
             </details> 
@@ -415,6 +438,7 @@ try {
                     <?= render_snake_cards($adults, $pdo) ?> 
                     <div style="margin-top:1rem;"> 
                         <button type="submit" class="btn secondary">Éditer les adultes</button> 
+                        <button type="submit" formaction="bulk_repas.php?meal_type=adulte" class="btn secondary">Ajouter un repas</button>
                     </div> 
                 </form> 
             </details> 
@@ -461,7 +485,7 @@ try {
                         <form method="post" action="delete_clutch.php" onsubmit="return confirm('Supprimer cette ponte ?')"> 
                             <input type="hidden" name="id" value="<?= (int)$c['id'] ?>"> 
                             <input type="hidden" name="redirect_to" value="index.php"> 
-                            <button class="btn danger">🗑</button> 
+                            <button class="btn danger" type="submit">🗑</button> 
                         </form> 
                     </td> 
                 </tr> 
