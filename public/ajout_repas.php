@@ -3,7 +3,12 @@ require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/functions.php';
 
 // Récupérer la liste des serpents, classée par leur type de repas par défaut
-$snakesByMealType = $pdo->query("SELECT * FROM snakes ORDER BY default_meal_type ASC, name ASC")->fetchAll();
+$snakesByMealType = $pdo->query("
+    SELECT * FROM snakes 
+    ORDER BY default_meal_type ASC,
+             CAST(REGEXP_SUBSTR(name, '[0-9]+') AS UNSIGNED) ASC,
+             name ASC
+")->fetchAll();
 
 // On va regrouper les serpents par type de repas
 $groupedSnakes = [];
@@ -17,6 +22,12 @@ foreach ($snakesByMealType as $s) {
 
 // Récupérer l'ID du serpent depuis l'URL si elle est présente
 $preselectedSnakeId = isset($_GET['snake_id']) ? (int)$_GET['snake_id'] : null;
+$preselectedSnake = null;
+if ($preselectedSnakeId) {
+    $stmt = $pdo->prepare("SELECT * FROM snakes WHERE id = ?");
+    $stmt->execute([$preselectedSnakeId]);
+    $preselectedSnake = $stmt->fetch();
+}
 
 $done = false;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -35,13 +46,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $date = $_POST['date'] ?? date('Y-m-d');
     $count = (int)($_POST['count'] ?? 1);
     $prey_type = in_array($_POST['prey_type'] ?? '', ['vivant','mort','congelé']) ? $_POST['prey_type'] : 'mort';
+    $meal_type = $_POST['meal_type'] ?? null; // NOUVEAU : Récupérer le type de repas
     $refused = isset($_POST['refused']) ? 1 : 0;
-    $comment = trim($_POST['comment'] ?? '');
+    $notes = trim($_POST['notes'] ?? '');
 
     if ($snake_ids) {
-        $stmt = $pdo->prepare("INSERT INTO feedings (snake_id, date, count, prey_type, refused, comment) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt = $pdo->prepare("INSERT INTO feedings (snake_id, date, count, prey_type, meal_type, refused, notes) VALUES (?, ?, ?, ?, ?, ?, ?)");
         foreach ($snake_ids as $sid) {
-            $stmt->execute([(int)$sid, $date, $count, $prey_type, $refused, $comment ?: null]);
+            $stmt->execute([(int)$sid, $date, $count, $prey_type, $meal_type, $refused, $notes ?: null]);
         }
         $done = true;
     }
@@ -127,13 +139,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </select>
                 </div>
                 <div>
+                    <label>Type de repas</label>
+                    <select name="meal_type">
+                        <option value="" <?= ($preselectedSnake && $preselectedSnake['default_meal_type'] === null) ? 'selected' : '' ?>>(Aucun)</option>
+                        <option value="rosé" <?= ($preselectedSnake && $preselectedSnake['default_meal_type'] === 'rosé') ? 'selected' : '' ?>>Rosé</option>
+                        <option value="blanchon" <?= ($preselectedSnake && $preselectedSnake['default_meal_type'] === 'blanchon') ? 'selected' : '' ?>>Blanchon</option>
+                        <option value="sauteuse" <?= ($preselectedSnake && $preselectedSnake['default_meal_type'] === 'sauteuse') ? 'selected' : '' ?>>Sauteuse</option>
+                        <option value="adulte" <?= ($preselectedSnake && $preselectedSnake['default_meal_type'] === 'adulte') ? 'selected' : '' ?>>Adulte</option>
+                    </select>
+                </div>
+                <div>
                     <label><input type="checkbox" name="refused" value="1"> Refusé</label>
                 </div>
             </div>
 
             <div style="margin-top:1rem;">
-                <label>Commentaire</label>
-                <textarea name="comment"></textarea>
+                <label>Notes</label>
+                <textarea name="notes"></textarea>
             </div>
 
             <div style="margin-top:1rem;">
