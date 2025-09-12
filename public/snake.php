@@ -20,11 +20,10 @@ if (!$snake) {
     exit;
 }
 
-// Récupération des repas du serpent avec le type de repas
+// Récupération des repas du serpent avec le type de repas et le type de proie
 $feedingsStmt = $pdo->prepare("
-    SELECT f.*, s.default_meal_type
+    SELECT f.*
     FROM feedings f
-    JOIN snakes s ON f.snake_id = s.id
     WHERE f.snake_id = ?
     ORDER BY f.date DESC
 ");
@@ -58,11 +57,11 @@ define('THUMB_DIR', 'uploads/thumbnails/');
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    <script src="assets/theme.js" defer></script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= h($snake['name']) ?> — Suivi</title>
     <link rel="stylesheet" href="assets/style.css">
-    <script src="assets/theme.js" defer></script>
     <style>
         .image-gallery {
             display: flex;
@@ -116,10 +115,10 @@ define('THUMB_DIR', 'uploads/thumbnails/');
             <form action="update_snake.php" method="post">
                 <input type="hidden" name="id" value="<?= (int)$snake['id'] ?>">
                 <div class="grid">
-        <div>
-            <label>Nom</label>
-            <input type="text" name="name" value="<?= h($snake['name']) ?>" required>
-        </div>
+    <div>
+        <label>Nom</label>
+        <input type="text" name="name" value="<?= h($snake['name']) ?>" required>
+    </div>
                     <div>
                         <label>Sexe</label>
                         <select name="sex" required>
@@ -180,7 +179,7 @@ define('THUMB_DIR', 'uploads/thumbnails/');
         <button type="submit" class="btn danger full-width">Supprimer le serpent</button>
     </form>
 </div>        
- </p>
+</p>
     </div>
 
     ---
@@ -243,6 +242,8 @@ define('THUMB_DIR', 'uploads/thumbnails/');
                         <tr>
                             <th>Date</th>
                             <th>Type de repas</th>
+                            <th>Type de proie</th>
+                            <th>Nombre</th>
                             <th>Refusé</th>
                             <th>Commentaire</th>
                             <th>Actions</th>
@@ -252,9 +253,11 @@ define('THUMB_DIR', 'uploads/thumbnails/');
                         <?php foreach ($feedings as $f): ?>
                             <tr>
                                 <td><?= date('d/m/Y', strtotime($f['date'])) ?></td>
-                                <td><?= h($f['default_meal_type']) ?: 'N/A' ?></td>
+                                <td><?= h($f['meal_type']) ?: 'N/A' ?></td>
+                                <td><?= h($f['prey_type']) ?: 'N/A' ?></td>
+                                <td><?= (int)$f['count'] ?></td>
                                 <td><?= $f['refused'] ? 'Oui' : 'Non' ?></td>
-                                <td><?= h($f['comment']) ?: 'N/A' ?></td>
+                                <td><?= h($f['notes']) ?: 'N/A' ?></td>
                                 <td style="display:flex;gap:.4rem;">
                                     <form method="post" action="delete_feeding.php" onsubmit="return confirm('Supprimer ce repas ?')">
                                         <input type="hidden" name="id" value="<?= (int)$f['id'] ?>">
