@@ -46,7 +46,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $date = $_POST['date'] ?? date('Y-m-d');
     $count = (int)($_POST['count'] ?? 1);
     $prey_type = in_array($_POST['prey_type'] ?? '', ['vivant','mort','congelé']) ? $_POST['prey_type'] : 'mort';
-    $meal_type = $_POST['meal_type'] ?? null; // NOUVEAU : Récupérer le type de repas
+    
+    // NOUVEAU : Récupérer le type et la taille du rongeur séparément
+    $rongeur_type = $_POST['rongeur_type'] ?? null;
+    $rongeur_size = $_POST['rongeur_size'] ?? null;
+    
+    // NOUVEAU : Combiner le type et la taille pour le champ meal_type de la base de données
+    $meal_type = ($rongeur_type && $rongeur_size) ? $rongeur_type . ' ' . $rongeur_size : null;
+    
     $refused = isset($_POST['refused']) ? 1 : 0;
     $notes = trim($_POST['notes'] ?? '');
 
@@ -139,13 +146,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </select>
                 </div>
                 <div>
-                    <label>Type de repas</label>
-                    <select name="meal_type">
-                        <option value="" <?= ($preselectedSnake && $preselectedSnake['default_meal_type'] === null) ? 'selected' : '' ?>>(Aucun)</option>
-                        <option value="rosé" <?= ($preselectedSnake && $preselectedSnake['default_meal_type'] === 'rosé') ? 'selected' : '' ?>>Rosé</option>
-                        <option value="blanchon" <?= ($preselectedSnake && $preselectedSnake['default_meal_type'] === 'blanchon') ? 'selected' : '' ?>>Blanchon</option>
-                        <option value="sauteuse" <?= ($preselectedSnake && $preselectedSnake['default_meal_type'] === 'sauteuse') ? 'selected' : '' ?>>Sauteuse</option>
-                        <option value="adulte" <?= ($preselectedSnake && $preselectedSnake['default_meal_type'] === 'adulte') ? 'selected' : '' ?>>Adulte</option>
+                    <label>Type de rongeur</label>
+                    <select name="rongeur_type">
+                        <option value="souris">Souris</option>
+                        <option value="rat">Rat</option>
+                        <option value="mastomys">Mastomys</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Taille du rongeur</label>
+                    <select name="rongeur_size">
+                        <option value="rosé">Rosé</option>
+                        <option value="blanchon">Blanchon</option>
+                        <option value="sauteuse">Sauteuse</option>
+                        <option value="adulte">Adulte</option>
                     </select>
                 </div>
                 <div>
