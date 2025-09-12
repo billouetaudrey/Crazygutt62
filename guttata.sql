@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : localhost
--- Généré le : jeu. 04 sep. 2025 à 16:17
+-- Généré le : ven. 12 sep. 2025 à 11:09
 -- Version du serveur : 10.11.13-MariaDB-0ubuntu0.24.04.1
 -- Version de PHP : 8.3.6
 
@@ -47,6 +47,7 @@ CREATE TABLE `feedings` (
   `id` int(11) NOT NULL,
   `snake_id` int(11) NOT NULL,
   `date` date NOT NULL,
+  `meal_type` varchar(255) DEFAULT NULL,
   `count` tinyint(4) NOT NULL DEFAULT 1,
   `prey_type` enum('vivant','mort','congelé') NOT NULL,
   `refused` tinyint(1) NOT NULL DEFAULT 0,
@@ -54,7 +55,8 @@ CREATE TABLE `feedings` (
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `dernier_repas` date DEFAULT NULL,
   `type` varchar(50) NOT NULL DEFAULT 'repas',
-  `value` varchar(255) DEFAULT NULL
+  `value` varchar(255) DEFAULT NULL,
+  `notes` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
