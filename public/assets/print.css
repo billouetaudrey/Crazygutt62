@@ -1,0 +1,24 @@
+/* Style pour l'impression */
+body {
+    background-color: white !important;
+    color: black !important;
+}
+
+.couple-container {
+    gap: 2rem;
+    padding: 0;
+}
+
+.couple-card {
+    border: 1px solid black !important;
+}
+
+h2, p, strong, .badge {
+    color: black !important;
+    background-color: transparent !important;
+}
+
+/* Masquer les boutons d'action lors de l'impression */
+button, .no-print {
+    display: none;
+}
