@@ -15,7 +15,7 @@ try {
     }
 
     // Prepare a query to fetch the snake data, including profile_photo_id
-    $stmt = $pdo->prepare("SELECT id, name, sex, morph, birth_year, weight, profile_photo_id FROM snakes WHERE id IN (?, ?) ORDER BY name ASC");
+    $stmt = $pdo->prepare("SELECT id, name, sex, morph, birth_year, profile_photo_id FROM snakes WHERE id IN (?, ?) ORDER BY name ASC");
     $stmt->execute([$id1, $id2]);
     $snakes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -144,8 +144,6 @@ try {
             <p><strong>Sexe :</strong> <?= sex_badge($snake1['sex']) ?></p>
             <p><strong>Phase :</strong> <?= h($snake1['morph']) ?></p>
             <p><strong>Année de naissance :</strong> <?= h($snake1['birth_year']) ?></p>
-            <p><strong>Poids :</strong> <?= h($snake1['weight']) ? h($snake1['weight']) . ' g' : 'N/A' ?></p>
-            <p><strong>Commentaire :</strong> N/A</p>
         </div>
         <div class="couple-card">
             <h2><?= h($snake2['name']) ?></h2>
@@ -159,8 +157,6 @@ try {
             <p><strong>Sexe :</strong> <?= sex_badge($snake2['sex']) ?></p>
             <p><strong>Phase :</strong> <?= h($snake2['morph']) ?></p>
             <p><strong>Année de naissance :</strong> <?= h($snake2['birth_year']) ?></p>
-            <p><strong>Poids :</strong> <?= h($snake2['weight']) ? h($snake2['weight']) . ' g' : 'N/A' ?></p>
-            <p><strong>Commentaire :</strong> N/A</p>
         </div>
     </div>
 </body>
