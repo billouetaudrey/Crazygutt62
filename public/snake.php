@@ -300,7 +300,7 @@ define('THUMB_DIR', 'uploads/thumbnails/');
                         <?php foreach ($sheds as $s): ?>
                             <tr>
                                 <td><?= date('d/m/Y', strtotime($s['date'])) ?></td>
-                                <td><?= h($s['quality']) ?: 'N/A' ?></td>
+<td><?= ($s['complete'] == 1) ? 'Complète' : 'Incomplète' ?></td>
                                 <td><?= h($s['comment']) ?: 'N/A' ?></td>
                                 <td style="display:flex;gap:.4rem;">
                                     <form method="post" action="delete_shed.php" onsubmit="return confirm('Supprimer cette mue ?')">
