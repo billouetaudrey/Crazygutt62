@@ -104,6 +104,10 @@ define('THUMB_DIR', 'uploads/thumbnails/');
     <div class="header">
         <a href="<?= base_url('index.php') ?>" class="btn secondary">← Retour</a>
         <div class="brand">🐍 Détails de <?= h($snake['name']) ?></div>
+    <div>
+        <a href="print.php?id=<?= (int)$snake['id'] ?>" class="btn primary" target="_blank">Imprimer la fiche</a>
+
+    </div>
         <div class="empty"></div>
     </div>
     <div class="card">
