@@ -3,32 +3,64 @@ try {
     require_once __DIR__ . '/../includes/db.php';
     require_once __DIR__ . '/../includes/functions.php';
 
-    // Définir le chemin de base pour les vignettes
     define('THUMB_DIR', 'uploads/thumbnails/');
 
-    // Get snake IDs from URL parameters
+    $snakes = [];
+    $is_single_snake = false;
+    $single_snake_data = null;
+    $feedings = [];
+    $sheds = [];
+
+    // Get snake IDs from the URL
+    $id = $_GET['id'] ?? null;
     $id1 = $_GET['id1'] ?? null;
     $id2 = $_GET['id2'] ?? null;
 
-    if (!$id1 || !$id2) {
-        die("Erreur : Deux identifiants de serpent sont requis.");
+    if ($id) {
+        $is_single_snake = true;
+        // Fetch single snake info
+        $stmt = $pdo->prepare("SELECT id, name, sex, morph, birth_year, profile_photo_id, comment FROM snakes WHERE id = ?");
+        $stmt->execute([$id]);
+        $single_snake_data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$single_snake_data) {
+            die("Erreur : Impossible de trouver le serpent spécifié.");
+        }
+
+        // Fetch last 3 feedings
+        $feedingsStmt = $pdo->prepare("SELECT date, meal_type, prey_type, count FROM feedings WHERE snake_id = ? ORDER BY date DESC LIMIT 3");
+        $feedingsStmt->execute([$id]);
+        $feedings = $feedingsStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Fetch last 3 sheds
+        $shedsStmt = $pdo->prepare("SELECT date, quality, comment FROM sheds WHERE snake_id = ? ORDER BY date DESC LIMIT 3");
+        $shedsStmt->execute([$id]);
+        $sheds = $shedsStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $snakes[] = $single_snake_data;
+
+    } elseif ($id1 && $id2) {
+        // Fetch two snakes for a couple display
+        $is_single_snake = false;
+        
+        $stmt1 = $pdo->prepare("SELECT id, name, sex, morph, birth_year, profile_photo_id FROM snakes WHERE id = ?");
+        $stmt1->execute([$id1]);
+        $snake1 = $stmt1->fetch(PDO::FETCH_ASSOC);
+
+        $stmt2 = $pdo->prepare("SELECT id, name, sex, morph, birth_year, profile_photo_id FROM snakes WHERE id = ?");
+        $stmt2->execute([$id2]);
+        $snake2 = $stmt2->fetch(PDO::FETCH_ASSOC);
+
+        if ($snake1 && $snake2) {
+            $snakes = [$snake1, $snake2];
+        } else {
+            die("Erreur : Impossible de trouver un ou plusieurs des serpents spécifiés.");
+        }
+    } else {
+        die("Erreur : Un ou deux identifiants de serpent sont requis.");
     }
 
-    // Prepare a query to fetch the snake data, including profile_photo_id
-    $stmt = $pdo->prepare("SELECT id, name, sex, morph, birth_year, profile_photo_id FROM snakes WHERE id IN (?, ?) ORDER BY name ASC");
-    $stmt->execute([$id1, $id2]);
-    $snakes = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    // If we don't find two snakes, show an error
-    if (count($snakes) !== 2) {
-        die("Erreur : Impossible de trouver les deux serpents spécifiés.");
-    }
-
-    // Assign the two snakes to variables for easy access
-    $snake1 = $snakes[0];
-    $snake2 = $snakes[1];
-
-    // Function to get the photo filename for a snake
+    // Function to get the photo filename
     function get_snake_photo($pdo, $snake_data) {
         $photo_filename = null;
         if ($snake_data['profile_photo_id'] > 0) {
@@ -36,7 +68,6 @@ try {
             $stmt->execute([$snake_data['profile_photo_id']]);
             $photo_filename = $stmt->fetchColumn();
         }
-        // Fallback: get the latest photo if no profile photo is set
         if (!$photo_filename) {
             $stmt = $pdo->prepare("SELECT filename FROM photos WHERE snake_id = ? ORDER BY uploaded_at DESC LIMIT 1");
             $stmt->execute([$snake_data['id']]);
@@ -45,8 +76,11 @@ try {
         return $photo_filename;
     }
 
-    $snake1['photo'] = get_snake_photo($pdo, $snake1);
-    $snake2['photo'] = get_snake_photo($pdo, $snake2);
+    foreach ($snakes as &$snake) {
+        $snake['photo'] = get_snake_photo($pdo, $snake);
+    }
+
+    unset($snake); // Ajoutez cette ligne pour détruire la référence.
 
 } catch (PDOException $e) {
     die("Erreur de connexion à la base de données : " . $e->getMessage());
@@ -57,107 +91,195 @@ try {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Couple : <?= h($snake1['name']) ?> & <?= h($snake2['name']) ?></title>
+    <title>
+        <?php if ($is_single_snake): ?>
+            Étiquette : <?= h($snakes[0]['name']) ?>
+        <?php else: ?>
+            Couple : <?= h($snakes[0]['name']) ?> & <?= h($snakes[1]['name']) ?>
+        <?php endif; ?>
+    </title>
     <link rel="stylesheet" href="assets/style.css">
     <link rel="stylesheet" href="assets/print.css" media="print">
     <style>
-        .couple-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            margin: 2rem;
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
         }
-        .couple-card {
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 1.5rem;
-            color: white; /* Couleur du texte pour l'affichage */
+        .print-container {
             display: flex;
             flex-direction: column;
-            align-items: center; /* Centrer le contenu horizontalement */
-            text-align: center; /* Centrer le texte */
+            align-items: center;
+            padding: 1rem;
+            max-width: 400px;
+            margin: auto;
         }
-        .couple-card h2, .couple-card p, .couple-card strong {
+        .snake-card {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
             color: white;
+            text-align: center;
+            width: 100%;
         }
-        .couple-card h2 {
-            margin-top: 0;
-            margin-bottom: 1rem;
+        .snake-card h2 {
+            margin: 0 0 0.5rem;
+            font-size: 1.5rem;
         }
-        .couple-card .snake-photo {
-            width: 150px; /* Taille de la photo */
-            height: 150px;
+        .snake-photo {
+            width: 100px;
+            height: 100px;
             overflow: hidden;
-            border-radius: 50%; /* Rendre la photo ronde */
-            margin-bottom: 1rem;
-            background-color: var(--background-color); /* Fond pour les photos manquantes */
+            border-radius: 50%;
+            margin: 0 auto 0.5rem;
+            border: 2px solid var(--border-color);
             display: flex;
             justify-content: center;
             align-items: center;
-            border: 2px solid var(--border-color); /* Bordure autour de la photo */
         }
-        .couple-card .snake-photo img {
+        .snake-photo img {
             width: 100%;
             height: 100%;
-            object-fit: cover; /* Assurer que l'image couvre le cercle */
+            object-fit: cover;
         }
-        .couple-card .no-photo {
-            font-size: 3rem;
+        .no-photo {
+            font-size: 2rem;
             color: var(--text-color-light);
         }
-
-        /* Styles spécifiques pour l'impression, pour s'assurer que la photo est visible */
+        .info-list {
+            list-style: none;
+            padding: 0;
+            margin: 0.5rem 0;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+        .info-list li {
+            margin-bottom: 0.2rem;
+        }
+        .info-list strong {
+            display: inline-block;
+            width: 120px;
+        }
+        .section-title {
+            font-weight: bold;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.2rem;
+        }
+        .details-list {
+            list-style: none;
+            padding: 0;
+            font-size: 0.8rem;
+        }
+        .details-list li {
+            margin-bottom: 0.2rem;
+        }
+        
+        /* Styles d'impression */
         @media print {
-            .couple-card {
-                color: black; /* Texte noir pour l'impression */
-                border-color: black !important;
+            body {
+                background-color: white;
+                color: black;
+                margin: 0;
+                padding: 0;
             }
-            .couple-card h2, .couple-card p, .couple-card strong {
+            .no-print {
+                display: none;
+            }
+            .print-container {
+                padding: 0.5cm;
+            }
+            .snake-card {
+                border-color: black;
+                box-shadow: none;
+                color: black;
+            }
+            .snake-card h2, .snake-card p, .snake-card strong {
                 color: black !important;
             }
-            .couple-card .snake-photo {
+            .snake-photo {
                 border-color: black !important;
-                background-color: white !important;
             }
-            .couple-card .no-photo {
+            .no-photo {
                 color: black !important;
+            }
+            .section-title {
+                border-bottom-color: black;
             }
         }
     </style>
 </head>
 <body>
     <div style="text-align: center; margin: 1rem;" class="no-print">
-        <button onclick="window.print()">Imprimer cette page</button>
-        <button onclick="window.close()">Retour à la liste</button>
+        <button onclick="window.print()">Imprimer cette étiquette</button>
+        <button onclick="window.close()">Fermer</button>
     </div>
 
-    <div class="couple-container">
-        <div class="couple-card">
-            <h2><?= h($snake1['name']) ?></h2>
-            <div class="snake-photo">
-                <?php if ($snake1['photo']): ?>
-                    <img src="<?= base_url(THUMB_DIR . h($snake1['photo'])) ?>" alt="Photo de <?= h($snake1['name']) ?>">
+    <div class="print-container">
+        <?php if ($is_single_snake): ?>
+            <div class="snake-card">
+                <h2><?= h($snakes[0]['name']) ?></h2>
+                <div class="snake-photo">
+                    <?php if ($snakes[0]['photo']): ?>
+                        <img src="<?= base_url(THUMB_DIR . h($snakes[0]['photo'])) ?>" alt="Photo de <?= h($snakes[0]['name']) ?>">
+                    <?php else: ?>
+                        <div class="no-photo">📸</div>
+                    <?php endif; ?>
+                </div>
+
+                <ul class="info-list">
+                    <li><strong>Sexe :</strong> <?= sex_badge($snakes[0]['sex']) ?></li>
+                    <li><strong>Phase :</strong> <?= h($snakes[0]['morph']) ?></li>
+                    <li><strong>Naissance :</strong> <?= h($snakes[0]['birth_year']) ?></li>
+                </ul>
+
+                <?php if ($snakes[0]['comment']): ?>
+                    <p class="section-title">Commentaire</p>
+                    <p style="font-size: 0.8rem; text-align: left; margin: 0;"><?= nl2br(h($snakes[0]['comment'])) ?></p>
+                <?php endif; ?>
+
+                <p class="section-title">Derniers repas</p>
+                <?php if ($feedings): ?>
+                    <ul class="details-list">
+                        <?php foreach ($feedings as $f): ?>
+                            <li><?= date('d/m/Y', strtotime($f['date'])) ?>: <?= h($f['prey_type']) ?: 'N/A' ?> (x<?= (int)$f['count'] ?>)</li>
+                        <?php endforeach; ?>
+                    </ul>
                 <?php else: ?>
-                    <div class="no-photo">📸</div>
+                    <p style="font-size: 0.8rem; margin: 0;">Aucun repas récent.</p>
+                <?php endif; ?>
+
+                <p class="section-title">Dernières mues</p>
+                <?php if ($sheds): ?>
+                    <ul class="details-list">
+                        <?php foreach ($sheds as $s): ?>
+                            <li><?= date('d/m/Y', strtotime($s['date'])) ?>: <?= h($s['quality']) ?: 'N/A' ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php else: ?>
+                    <p style="font-size: 0.8rem; margin: 0;">Aucune mue récente.</p>
                 <?php endif; ?>
             </div>
-            <p><strong>Sexe :</strong> <?= sex_badge($snake1['sex']) ?></p>
-            <p><strong>Phase :</strong> <?= h($snake1['morph']) ?></p>
-            <p><strong>Année de naissance :</strong> <?= h($snake1['birth_year']) ?></p>
-        </div>
-        <div class="couple-card">
-            <h2><?= h($snake2['name']) ?></h2>
-            <div class="snake-photo">
-                <?php if ($snake2['photo']): ?>
-                    <img src="<?= base_url(THUMB_DIR . h($snake2['photo'])) ?>" alt="Photo de <?= h($snake2['name']) ?>">
-                <?php else: ?>
-                    <div class="no-photo">📸</div>
-                <?php endif; ?>
-            </div>
-            <p><strong>Sexe :</strong> <?= sex_badge($snake2['sex']) ?></p>
-            <p><strong>Phase :</strong> <?= h($snake2['morph']) ?></p>
-            <p><strong>Année de naissance :</strong> <?= h($snake2['birth_year']) ?></p>
-        </div>
+        <?php else: ?>
+            <?php foreach ($snakes as $snake): ?>
+                <div class="snake-card">
+                    <h2><?= h($snake['name']) ?></h2>
+                    <div class="snake-photo">
+                        <?php if ($snake['photo']): ?>
+                            <img src="<?= base_url(THUMB_DIR . h($snake['photo'])) ?>" alt="Photo de <?= h($snake['name']) ?>">
+                        <?php else: ?>
+                            <div class="no-photo">📸</div>
+                        <?php endif; ?>
+                    </div>
+                    <p><strong>Sexe :</strong> <?= sex_badge($snake['sex']) ?></p>
+                    <p><strong>Phase :</strong> <?= h($snake['morph']) ?></p>
+                    <p><strong>Année de naissance :</strong> <?= h($snake['birth_year']) ?></p>
+                </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
     </div>
 </body>
 </html>
