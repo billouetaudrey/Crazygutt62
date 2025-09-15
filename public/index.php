@@ -454,6 +454,7 @@ try {
     <div class="card"> 
         <h3>Pontes</h3> 
         <a class="btn" href="ajout_ponte.php">+ Ajouter ponte</a> 
+    <div style="overflow-x: auto;">
         <table> 
             <thead> 
                 <tr> 
