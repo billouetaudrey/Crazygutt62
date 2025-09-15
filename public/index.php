@@ -479,21 +479,23 @@ try {
                     $hatch_status = "J-$remaining_days"; 
                 } 
             ?> 
-                <tr> 
-                    <td><?= date('d/m/Y', strtotime($c['lay_date'])) ?></td> 
-                    <td><a href="snake.php?id=<?= (int)$c['male_id'] ?>"><?= h($c['male_name']) ?></a></td> 
-                    <td><a href="snake.php?id=<?= (int)$c['female_id'] ?>"><?= h($c['female_name']) ?></a></td> 
-                    <td><?= (int)$c['egg_count'] ?></td> 
-                    <td><?= date('d/m/Y', strtotime($c['hatch_date'])) ?></td> 
-                    <td><?= $hatch_status ?></td> 
-                    <td> 
-                        <form method="post" action="delete_clutch.php" onsubmit="return confirm('Supprimer cette ponte ?')"> 
-                            <input type="hidden" name="id" value="<?= (int)$c['id'] ?>"> 
-                            <input type="hidden" name="redirect_to" value="index.php"> 
-                            <button class="btn danger" type="submit">🗑</button> 
-                        </form> 
-                    </td> 
-                </tr> 
+<tr> 
+    <td><?= date('d/m/Y', strtotime($c['lay_date'])) ?></td> 
+    <td><a href="snake.php?id=<?= (int)$c['male_id'] ?>"><?= h($c['male_name']) ?></a></td> 
+    <td><a href="snake.php?id=<?= (int)$c['female_id'] ?>"><?= h($c['female_name']) ?></a></td> 
+    <td><?= (int)$c['egg_count'] ?></td> 
+    <td><?= date('d/m/Y', strtotime($c['hatch_date'])) ?></td> 
+    <td><?= $hatch_status ?></td> 
+    <td><?= h($c['comment']) ?></td> <!-- ✅ affiche bien le commentaire -->
+    <td> <!-- ✅ ici la corbeille est bien dans Action -->
+        <form method="post" action="delete_clutch.php" onsubmit="return confirm('Supprimer cette ponte ?')"> 
+            <input type="hidden" name="id" value="<?= (int)$c['id'] ?>"> 
+            <input type="hidden" name="redirect_to" value="index.php"> 
+            <button class="btn danger" type="submit">🗑</button> 
+        </form> 
+    </td> 
+</tr>
+
             <?php endforeach; ?> 
             </tbody> 
         </table> 
