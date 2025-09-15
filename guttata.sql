@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : localhost
--- Généré le : ven. 12 sep. 2025 à 11:09
+-- Généré le : lun. 15 sep. 2025 à 12:36
 -- Version du serveur : 10.11.13-MariaDB-0ubuntu0.24.04.1
 -- Version de PHP : 8.3.6
 
@@ -20,6 +20,30 @@ SET time_zone = "+00:00";
 --
 -- Base de données : `guttata`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `babies`
+--
+
+CREATE TABLE `babies` (
+  `id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `morph` varchar(255) DEFAULT NULL,
+  `birth_date` date NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `baby_parents`
+--
+
+CREATE TABLE `baby_parents` (
+  `baby_id` int(11) NOT NULL,
+  `snake_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -56,7 +80,8 @@ CREATE TABLE `feedings` (
   `dernier_repas` date DEFAULT NULL,
   `type` varchar(50) NOT NULL DEFAULT 'repas',
   `value` varchar(255) DEFAULT NULL,
-  `notes` text DEFAULT NULL
+  `notes` text DEFAULT NULL,
+  `baby_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -84,7 +109,9 @@ CREATE TABLE `sheds` (
   `snake_id` int(11) NOT NULL,
   `date` date NOT NULL,
   `complete` tinyint(1) NOT NULL DEFAULT 1,
-  `comment` text DEFAULT NULL
+  `comment` text DEFAULT NULL,
+  `baby_id` int(11) DEFAULT NULL,
+  `quality` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -126,6 +153,19 @@ CREATE TABLE `snake_images` (
 --
 
 --
+-- Index pour la table `babies`
+--
+ALTER TABLE `babies`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Index pour la table `baby_parents`
+--
+ALTER TABLE `baby_parents`
+  ADD PRIMARY KEY (`baby_id`,`snake_id`),
+  ADD KEY `snake_id` (`snake_id`);
+
+--
 -- Index pour la table `clutches`
 --
 ALTER TABLE `clutches`
@@ -138,7 +178,8 @@ ALTER TABLE `clutches`
 --
 ALTER TABLE `feedings`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_feedings_snake` (`snake_id`);
+  ADD KEY `fk_feedings_snake` (`snake_id`),
+  ADD KEY `baby_id` (`baby_id`);
 
 --
 -- Index pour la table `photos`
@@ -152,7 +193,8 @@ ALTER TABLE `photos`
 --
 ALTER TABLE `sheds`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `snake_id` (`snake_id`);
+  ADD KEY `snake_id` (`snake_id`),
+  ADD KEY `baby_id` (`baby_id`);
 
 --
 -- Index pour la table `snakes`
@@ -170,6 +212,12 @@ ALTER TABLE `snake_images`
 --
 -- AUTO_INCREMENT pour les tables déchargées
 --
+
+--
+-- AUTO_INCREMENT pour la table `babies`
+--
+ALTER TABLE `babies`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT pour la table `clutches`
@@ -212,6 +260,13 @@ ALTER TABLE `snake_images`
 --
 
 --
+-- Contraintes pour la table `baby_parents`
+--
+ALTER TABLE `baby_parents`
+  ADD CONSTRAINT `baby_parents_ibfk_1` FOREIGN KEY (`baby_id`) REFERENCES `babies` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `baby_parents_ibfk_2` FOREIGN KEY (`snake_id`) REFERENCES `snakes` (`id`) ON DELETE CASCADE;
+
+--
 -- Contraintes pour la table `clutches`
 --
 ALTER TABLE `clutches`
@@ -222,6 +277,7 @@ ALTER TABLE `clutches`
 -- Contraintes pour la table `feedings`
 --
 ALTER TABLE `feedings`
+  ADD CONSTRAINT `feedings_ibfk_1` FOREIGN KEY (`baby_id`) REFERENCES `babies` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_feedings_snake` FOREIGN KEY (`snake_id`) REFERENCES `snakes` (`id`) ON DELETE CASCADE;
 
 --
@@ -234,7 +290,8 @@ ALTER TABLE `photos`
 -- Contraintes pour la table `sheds`
 --
 ALTER TABLE `sheds`
-  ADD CONSTRAINT `sheds_ibfk_1` FOREIGN KEY (`snake_id`) REFERENCES `snakes` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `sheds_ibfk_1` FOREIGN KEY (`snake_id`) REFERENCES `snakes` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `sheds_ibfk_2` FOREIGN KEY (`baby_id`) REFERENCES `babies` (`id`) ON DELETE CASCADE;
 
 --
 -- Contraintes pour la table `snake_images`
