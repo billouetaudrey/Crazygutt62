@@ -2,24 +2,35 @@
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/functions.php';
 
-// Sélectionne les serpents mâles et femelles
-$males = $pdo->query("SELECT * FROM snakes WHERE sex='M' ORDER BY name")->fetchAll();
-$females = $pdo->query("SELECT * FROM snakes WHERE sex='F' ORDER BY name")->fetchAll();
+// Get the current year to calculate the age
+$current_year = (int)date('Y');
+$breeding_age_year = $current_year - 2;
+
+// Select male snakes that are 2+ years old
+$males = $pdo->prepare("SELECT * FROM snakes WHERE sex='M' AND birth_year <= ? ORDER BY name");
+$males->execute([$breeding_age_year]);
+$males = $males->fetchAll();
+
+// Select female snakes that are 2+ years old
+$females = $pdo->prepare("SELECT * FROM snakes WHERE sex='F' AND birth_year <= ? ORDER BY name");
+$females->execute([$breeding_age_year]);
+$females = $females->fetchAll();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $male_id = (int)$_POST['male'];
-    $female_id = (int)$_POST['female'];
+    $male_id = (int)($_POST['male'] ?? 0);
+    $female_id = (int)($_POST['female'] ?? 0);
     $lay_date = $_POST['lay_date'] ?? null;
     $comment = $_POST['comment'] ?? '';
     $egg_count = (int)($_POST['egg_count'] ?? 0);
 
     if ($male_id && $female_id && $lay_date) {
-        // Fix: Add a placeholder for egg_count in the SQL query
+        // Prepare the SQL query to insert a new clutch
         $stmt = $pdo->prepare("INSERT INTO clutches (male_id, female_id, lay_date, egg_count, comment) VALUES (?, ?, ?, ?, ?)");
         
-        // Fix: Ensure the number of values in execute() matches the placeholders
+        // Execute the query with the submitted data
         $stmt->execute([$male_id, $female_id, $lay_date, $egg_count, $comment]);
         
+        // Redirect back to the index page after successful submission
         header("Location: index.php");
         exit;
     }
@@ -29,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ajouter une ponte</title>
   <link rel="stylesheet" href="assets/style.css">
   <script src="assets/theme.js" defer></script>
