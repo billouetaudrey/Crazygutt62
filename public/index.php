@@ -1,4 +1,4 @@
-<?php 
+<?php
 try {
     require_once __DIR__ . '/../includes/db.php';
     require_once __DIR__ . '/../includes/functions.php';
@@ -130,7 +130,7 @@ try {
             if ($needs_feeding_alert) $alert_hungry_adults[] = $s['name'];
         }
     }
-      
+     
     // Définir le chemin de base pour les vignettes
     define('THUMB_DIR', 'uploads/thumbnails/');
 
@@ -179,7 +179,7 @@ try {
         <?php 
         return ob_get_clean(); 
     } 
-      
+     
     // Petite fonction pour générer le tableau des bébés 
     function render_snake_table($list, $pdo) { 
         if (!$list) { 
@@ -276,13 +276,14 @@ try {
         <div class="brand">🐍 Pantherophis — Suivi</div> 
         <button class="theme-toggle" onclick="toggleTheme()" title="Basculer thème">🌙/☀️</button> 
         <div style="margin-top:1rem; text-align:right;"> 
-            <a class="btn secondary" href="gestion_donnees.php">⚙️ Gestion des données</a> 
+            <a class="btn secondary" href="gestion_donnees.php">⚙️ Gestion des données</a>
+            <a class="btn secondary" href="https://billouetaudrey.ovh/gestion_naissances/">⚙️ Gestion des ventes/dépenses</a>  
             <a class="btn secondary" href="stats.php">📊 Statistiques</a>          
             <a class="btn secondary" href="https://www.morphmarket.com/c/reptiles/colubrids/corn-snakes/genetic-calculator/" target="_blank">🧬 Génétique</a>
-        
+         
         </div> 
     </div> 
-      
+     
     <?php if ($alert_hungry_baby): ?>
         <div class="card alert warning">
             ⚠️ Attention : au moins un bébé n'a pas mangé depuis plus de 7 jours !
@@ -386,7 +387,7 @@ try {
             </div> 
         </div> 
     </div> 
-      
+     
     <div class="card" style="text-align:center;"> 
         <h2>Répartition par type de repas</h2> 
         <div style="display:flex; justify-content:space-around; margin-top:1rem;"> 
@@ -401,6 +402,11 @@ try {
 
     <div class="card"> 
         <h2>Mes serpents</h2> 
+        <div style="margin-bottom: 1rem;">
+            <button type="button" class="btn primary" onclick="printCouple()">
+                🖨️ Créer une étiquette de couple
+            </button>
+        </div>
         <?php if (empty($snakes)): ?> 
             <div class="helper">Aucun serpent pour l'instant.</div> 
         <?php else: ?> 
@@ -480,7 +486,6 @@ try {
                     <td><?= (int)$c['egg_count'] ?></td> 
                     <td><?= date('d/m/Y', strtotime($c['hatch_date'])) ?></td> 
                     <td><?= $hatch_status ?></td> 
-                    <td><?= h($c['comment']) ?></td> 
                     <td> 
                         <form method="post" action="delete_clutch.php" onsubmit="return confirm('Supprimer cette ponte ?')"> 
                             <input type="hidden" name="id" value="<?= (int)$c['id'] ?>"> 
@@ -543,6 +548,21 @@ try {
             }); 
         }); 
     }); 
-</script> 
+
+    // Fonction pour gérer l'impression d'un couple
+    function printCouple() {
+        const checkedSnakes = document.querySelectorAll('input[name="snake_ids[]"]:checked');
+
+        if (checkedSnakes.length !== 2) {
+            alert("Veuillez sélectionner exactement deux serpents pour créer une étiquette de couple.");
+            return;
+        }
+
+        const id1 = checkedSnakes[0].value;
+        const id2 = checkedSnakes[1].value;
+
+        window.open(`print.php?id1=${id1}&id2=${id2}`, '_blank');
+    }
+</script>
 </body> 
 </html>
