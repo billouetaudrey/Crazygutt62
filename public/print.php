@@ -33,7 +33,7 @@ try {
         $feedings = $feedingsStmt->fetchAll(PDO::FETCH_ASSOC);
 
         // Fetch last 3 sheds
-        $shedsStmt = $pdo->prepare("SELECT date, quality, comment FROM sheds WHERE snake_id = ? ORDER BY date DESC LIMIT 3");
+        $shedsStmt = $pdo->prepare("SELECT date, complete, comment FROM sheds WHERE snake_id = ? ORDER BY date DESC LIMIT 3");
         $shedsStmt->execute([$id]);
         $sheds = $shedsStmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -80,7 +80,7 @@ try {
         $snake['photo'] = get_snake_photo($pdo, $snake);
     }
 
-    unset($snake); // Ajoutez cette ligne pour détruire la référence.
+    unset($snake); // Unset the reference.
 
 } catch (PDOException $e) {
     die("Erreur de connexion à la base de données : " . $e->getMessage());
@@ -184,7 +184,6 @@ try {
                 background-color: white;
                 color: black;
                 margin: 0;
-                padding: 0;
             }
             .no-print {
                 display: none;
@@ -256,7 +255,7 @@ try {
                 <?php if ($sheds): ?>
                     <ul class="details-list">
                         <?php foreach ($sheds as $s): ?>
-                            <li><?= date('d/m/Y', strtotime($s['date'])) ?>: <?= h($s['quality']) ?: 'N/A' ?></li>
+                            <li><?= date('d/m/Y', strtotime($s['date'])) ?>: <?= ($s['complete'] == 1) ? 'Complète' : 'Incomplète' ?></li>
                         <?php endforeach; ?>
                     </ul>
                 <?php else: ?>
