@@ -481,25 +481,29 @@ try {
                 </thead>
                 <tbody>
                 <?php foreach ($gestations as $g):
-                    $gestation_date_min = new DateTime($g['pairing_date']);
-                    $gestation_date_min->modify('+35 days');
-                    $gestation_date_max = new DateTime($g['pairing_date']);
-                    $gestation_date_max->modify('+43 days');
                     $today = new DateTime();
-                    $remaining_days = $today->diff($gestation_date_min)->days;
+                    $ponte_min_date = new DateTime($g['pairing_date']);
+                    $ponte_min_date->modify('+35 days');
+                    $ponte_max_date = new DateTime($g['pairing_date']);
+                    $ponte_max_date->modify('+43 days');
+                    
                     $status = '';
-                    if ($gestation_date_min < $today) {
+                    if ($today > $ponte_max_date) {
                         $status = 'Terminé';
+                    } elseif ($today >= $ponte_min_date && $today <= $ponte_max_date) {
+                        $status = 'En cours';
                     } else {
-                        $status = "J-$remaining_days";
+                        $remaining_min = $today->diff($ponte_min_date)->days;
+                        $remaining_max = $today->diff($ponte_max_date)->days;
+                        $status = "J-$remaining_min à J-$remaining_max";
                     }
                 ?>
 <tr>
     <td><?= date('d/m/Y', strtotime($g['pairing_date'])) ?></td>
     <td><a href="snake.php?id=<?= (int)$g['male_id'] ?>"><?= h($g['male_name']) ?></a></td>
     <td><a href="snake.php?id=<?= (int)$g['female_id'] ?>"><?= h($g['female_name']) ?></a></td>
-    <td><?= $gestation_date_min->format('d/m/Y') ?></td>
-    <td><?= $gestation_date_max->format('d/m/Y') ?></td>
+    <td><?= $ponte_min_date->format('d/m/Y') ?></td>
+    <td><?= $ponte_max_date->format('d/m/Y') ?></td>
     <td><?= $status ?></td>
     <td><?= h($g['comment']) ?></td>
     <td>
@@ -537,18 +541,22 @@ try {
             </thead> 
             <tbody> 
             <?php foreach ($clutches as $c): 
+                $today = new DateTime();
                 $hatch_date_min = new DateTime($c['lay_date']);
                 $hatch_date_min->modify('+55 days');
                 $hatch_date_max = new DateTime($c['lay_date']);
                 $hatch_date_max->modify('+61 days');
-                $today = new DateTime();
-                $remaining_days = $today->diff($hatch_date_min)->days;
+                
                 $hatch_status = ''; 
-                if ($hatch_date_min < $today) { 
+                if ($today > $hatch_date_max) { 
                     $hatch_status = 'Éclos'; 
-                } else { 
-                    $hatch_status = "J-$remaining_days"; 
-                } 
+                } elseif ($today >= $hatch_date_min && $today <= $hatch_date_max) {
+                    $hatch_status = 'En cours';
+                } else {
+                    $remaining_min = $today->diff($hatch_date_min)->days;
+                    $remaining_max = $today->diff($hatch_date_max)->days;
+                    $hatch_status = "J-$remaining_min à J-$remaining_max";
+                }
             ?> 
 <tr> 
     <td><?= date('d/m/Y', strtotime($c['lay_date'])) ?></td> 
