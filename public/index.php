@@ -77,6 +77,17 @@ try {
     $clutchesStmt->execute();
     $clutches = $clutchesStmt->fetchAll();
 
+    // Fetch all gestations (accouplements)
+    $gestationsStmt = $pdo->prepare("
+        SELECT g.*, sm.name AS male_name, sf.name AS female_name
+        FROM gestations g
+        LEFT JOIN snakes sm ON g.male_id = sm.id
+        LEFT JOIN snakes sf ON g.female_id = sf.id
+        ORDER BY g.pairing_date DESC
+    ");
+    $gestationsStmt->execute();
+    $gestations = $gestationsStmt->fetchAll();
+
     // Sépare les serpents par catégorie d'âge et récupère la dernière photo
     // + Ajout des drapeaux d'alerte pour les repas
     $now = (int)(new DateTime())->format('Y');
@@ -130,7 +141,7 @@ try {
             if ($needs_feeding_alert) $alert_hungry_adults[] = $s['name'];
         }
     }
-     
+      
     // Définir le chemin de base pour les vignettes
     define('THUMB_DIR', 'uploads/thumbnails/');
 
@@ -179,7 +190,7 @@ try {
         <?php 
         return ob_get_clean(); 
     } 
-     
+      
     // Petite fonction pour générer le tableau des bébés 
     function render_snake_table($list, $pdo) { 
         if (!$list) { 
@@ -277,13 +288,13 @@ try {
         <button class="theme-toggle" onclick="toggleTheme()" title="Basculer thème">🌙/☀️</button> 
         <div style="margin-top:1rem; text-align:right;"> 
             <a class="btn secondary" href="gestion_donnees.php">⚙️ Gestion des données</a>
-            <a class="btn secondary" href="https://billouetaudrey.ovh/gestion_naissances/">⚙️ Gestion des ventes/dépenses</a>  
+            <a class="btn secondary" href="https://billouetaudrey.ovh/gestion_naissances/">⚙️ Gestion des ventes/dépenses</a> 
             <a class="btn secondary" href="stats.php">📊 Statistiques</a>          
             <a class="btn secondary" href="https://www.morphmarket.com/c/reptiles/colubrids/corn-snakes/genetic-calculator/" target="_blank">🧬 Génétique</a>
-         
+          
         </div> 
     </div> 
-     
+      
     <?php if ($alert_hungry_baby): ?>
         <div class="card alert warning">
             ⚠️ Attention : au moins un bébé n'a pas mangé depuis plus de 7 jours !
@@ -387,7 +398,7 @@ try {
             </div> 
         </div> 
     </div> 
-     
+      
     <div class="card" style="text-align:center;"> 
         <h2>Répartition par type de repas</h2> 
         <div style="display:flex; justify-content:space-around; margin-top:1rem;"> 
@@ -451,6 +462,61 @@ try {
         <?php endif; ?> 
     </div> 
 
+    <div class="card">
+        <h3>Accouplements</h3>
+        <a class="btn" href="add_gestation.php">+ Ajouter accouplement</a>
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date accouplement</th>
+                        <th>Père</th>
+                        <th>Mère</th>
+                        <th>Ponte min. (35J)</th>
+                        <th>Ponte max. (43J)</th>
+                        <th>Jours restants</th>
+                        <th>Commentaire</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($gestations as $g):
+                    $gestation_date_min = new DateTime($g['pairing_date']);
+                    $gestation_date_min->modify('+35 days');
+                    $gestation_date_max = new DateTime($g['pairing_date']);
+                    $gestation_date_max->modify('+43 days');
+                    $today = new DateTime();
+                    $remaining_days = $today->diff($gestation_date_min)->days;
+                    $status = '';
+                    if ($gestation_date_min < $today) {
+                        $status = 'Terminé';
+                    } else {
+                        $status = "J-$remaining_days";
+                    }
+                ?>
+<tr>
+    <td><?= date('d/m/Y', strtotime($g['pairing_date'])) ?></td>
+    <td><a href="snake.php?id=<?= (int)$g['male_id'] ?>"><?= h($g['male_name']) ?></a></td>
+    <td><a href="snake.php?id=<?= (int)$g['female_id'] ?>"><?= h($g['female_name']) ?></a></td>
+    <td><?= $gestation_date_min->format('d/m/Y') ?></td>
+    <td><?= $gestation_date_max->format('d/m/Y') ?></td>
+    <td><?= $status ?></td>
+    <td><?= h($g['comment']) ?></td>
+    <td>
+        <form method="post" action="delete_gestation.php" onsubmit="return confirm('Supprimer cet accouplement ?')">
+            <input type="hidden" name="id" value="<?= (int)$g['id'] ?>">
+            <input type="hidden" name="redirect_to" value="index.php">
+            <button class="btn danger" type="submit">🗑</button>
+        </form>
+    </td>
+</tr>
+
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
     <div class="card"> 
         <h3>Pontes</h3> 
         <a class="btn" href="ajout_ponte.php">+ Ajouter ponte</a> 
@@ -462,7 +528,8 @@ try {
                     <th>Père</th> 
                     <th>Mère</th> 
                     <th>Nb œufs</th> 
-                    <th>Éclosion</th> 
+                    <th>Éclosion min. (55J)</th>
+                    <th>Éclosion max. (61J)</th>
                     <th>Temps restant</th> 
                     <th>Commentaire</th> 
                     <th>Action</th> 
@@ -470,11 +537,14 @@ try {
             </thead> 
             <tbody> 
             <?php foreach ($clutches as $c): 
-                $hatch_date = new DateTime($c['hatch_date']); 
-                $today = new DateTime(); 
-                $remaining_days = $today->diff($hatch_date)->days; 
+                $hatch_date_min = new DateTime($c['lay_date']);
+                $hatch_date_min->modify('+55 days');
+                $hatch_date_max = new DateTime($c['lay_date']);
+                $hatch_date_max->modify('+61 days');
+                $today = new DateTime();
+                $remaining_days = $today->diff($hatch_date_min)->days;
                 $hatch_status = ''; 
-                if ($hatch_date < $today) { 
+                if ($hatch_date_min < $today) { 
                     $hatch_status = 'Éclos'; 
                 } else { 
                     $hatch_status = "J-$remaining_days"; 
@@ -485,10 +555,11 @@ try {
     <td><a href="snake.php?id=<?= (int)$c['male_id'] ?>"><?= h($c['male_name']) ?></a></td> 
     <td><a href="snake.php?id=<?= (int)$c['female_id'] ?>"><?= h($c['female_name']) ?></a></td> 
     <td><?= (int)$c['egg_count'] ?></td> 
-    <td><?= date('d/m/Y', strtotime($c['hatch_date'])) ?></td> 
+    <td><?= $hatch_date_min->format('d/m/Y') ?></td>
+    <td><?= $hatch_date_max->format('d/m/Y') ?></td>
     <td><?= $hatch_status ?></td> 
-    <td><?= h($c['comment']) ?></td> <!-- ✅ affiche bien le commentaire -->
-    <td> <!-- ✅ ici la corbeille est bien dans Action -->
+    <td><?= h($c['comment']) ?></td>
+    <td>
         <form method="post" action="delete_clutch.php" onsubmit="return confirm('Supprimer cette ponte ?')"> 
             <input type="hidden" name="id" value="<?= (int)$c['id'] ?>"> 
             <input type="hidden" name="redirect_to" value="index.php"> 
