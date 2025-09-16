@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : localhost
--- Généré le : lun. 15 sep. 2025 à 12:36
+-- Généré le : mar. 16 sep. 2025 à 07:04
 -- Version du serveur : 10.11.13-MariaDB-0ubuntu0.24.04.1
 -- Version de PHP : 8.3.6
 
@@ -82,6 +82,22 @@ CREATE TABLE `feedings` (
   `value` varchar(255) DEFAULT NULL,
   `notes` text DEFAULT NULL,
   `baby_id` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `gestations`
+--
+
+CREATE TABLE `gestations` (
+  `id` int(11) NOT NULL,
+  `male_id` int(11) NOT NULL,
+  `female_id` int(11) NOT NULL,
+  `pairing_date` date NOT NULL,
+  `gestation_date` date NOT NULL,
+  `comment` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -182,6 +198,14 @@ ALTER TABLE `feedings`
   ADD KEY `baby_id` (`baby_id`);
 
 --
+-- Index pour la table `gestations`
+--
+ALTER TABLE `gestations`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `male_id` (`male_id`),
+  ADD KEY `female_id` (`female_id`);
+
+--
 -- Index pour la table `photos`
 --
 ALTER TABLE `photos`
@@ -232,6 +256,12 @@ ALTER TABLE `feedings`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT pour la table `gestations`
+--
+ALTER TABLE `gestations`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT pour la table `photos`
 --
 ALTER TABLE `photos`
@@ -279,6 +309,13 @@ ALTER TABLE `clutches`
 ALTER TABLE `feedings`
   ADD CONSTRAINT `feedings_ibfk_1` FOREIGN KEY (`baby_id`) REFERENCES `babies` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_feedings_snake` FOREIGN KEY (`snake_id`) REFERENCES `snakes` (`id`) ON DELETE CASCADE;
+
+--
+-- Contraintes pour la table `gestations`
+--
+ALTER TABLE `gestations`
+  ADD CONSTRAINT `gestations_ibfk_1` FOREIGN KEY (`male_id`) REFERENCES `snakes` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `gestations_ibfk_2` FOREIGN KEY (`female_id`) REFERENCES `snakes` (`id`) ON DELETE CASCADE;
 
 --
 -- Contraintes pour la table `photos`
