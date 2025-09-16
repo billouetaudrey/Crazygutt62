@@ -2,87 +2,108 @@
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/functions.php';
 
-// Get the current year to calculate the age
-$current_year = (int)date('Y');
-$breeding_age_year = $current_year - 2;
+// Récupérer tous les accouplements existants
+$gestations = [];
+try {
+    $stmt = $pdo->prepare("
+        SELECT g.id, g.pairing_date, sm.name AS male_name, sf.name AS female_name
+        FROM gestations g
+        LEFT JOIN snakes sm ON g.male_id = sm.id
+        LEFT JOIN snakes sf ON g.female_id = sf.id
+        ORDER BY g.pairing_date DESC
+    ");
+    $stmt->execute();
+    $gestations = $stmt->fetchAll();
+} catch (PDOException $e) {
+    die("Erreur de base de données lors de la récupération des accouplements : " . $e->getMessage());
+}
 
-// Select male snakes that are 2+ years old
-$males = $pdo->prepare("SELECT * FROM snakes WHERE sex='M' AND birth_year <= ? ORDER BY name");
-$males->execute([$breeding_age_year]);
-$males = $males->fetchAll();
-
-// Select female snakes that are 2+ years old
-$females = $pdo->prepare("SELECT * FROM snakes WHERE sex='F' AND birth_year <= ? ORDER BY name");
-$females->execute([$breeding_age_year]);
-$females = $females->fetchAll();
-
+// Gérer la soumission du formulaire
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $male_id = (int)($_POST['male'] ?? 0);
-    $female_id = (int)($_POST['female'] ?? 0);
+    $gestation_id = (int)($_POST['gestation_id'] ?? 0);
     $lay_date = $_POST['lay_date'] ?? null;
     $comment = $_POST['comment'] ?? '';
     $egg_count = (int)($_POST['egg_count'] ?? 0);
 
-    if ($male_id && $female_id && $lay_date) {
-        // Prepare the SQL query to insert a new clutch
-        $stmt = $pdo->prepare("INSERT INTO clutches (male_id, female_id, lay_date, egg_count, comment) VALUES (?, ?, ?, ?, ?)");
-        
-        // Execute the query with the submitted data
-        $stmt->execute([$male_id, $female_id, $lay_date, $egg_count, $comment]);
-        
-        // Redirect back to the index page after successful submission
-        header("Location: index.php");
-        exit;
+    // Vérifier si un accouplement a été sélectionné et que la date est valide
+    if ($gestation_id && $lay_date) {
+        // Récupérer les identifiants du mâle et de la femelle à partir de l'accouplement sélectionné
+        $stmt_ids = $pdo->prepare('SELECT male_id, female_id FROM gestations WHERE id = ?');
+        $stmt_ids->execute([$gestation_id]);
+        $gestation_data = $stmt_ids->fetch();
+
+        if ($gestation_data) {
+            $male_id = $gestation_data['male_id'];
+            $female_id = $gestation_data['female_id'];
+
+            // Calculer la date d'éclosion estimée (moyenne 58 jours)
+            $hatch_date = date('Y-m-d', strtotime($lay_date . ' +58 days'));
+
+            // Préparer la requête d'insertion d'une nouvelle ponte
+            $stmt_insert = $pdo->prepare("INSERT INTO clutches (male_id, female_id, lay_date, hatch_date, egg_count, comment, gestation_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt_insert->execute([$male_id, $female_id, $lay_date, $hatch_date, $egg_count, $comment, $gestation_id]);
+
+            // Rediriger vers la page d'accueil
+            header("Location: index.php");
+            exit;
+        } else {
+            // Gérer le cas où l'accouplement n'est pas trouvé
+            echo "Erreur : Accouplement invalide sélectionné.";
+        }
+    } else {
+        echo "Erreur : Veuillez remplir tous les champs requis.";
     }
 }
 ?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ajouter une ponte</title>
-  <link rel="stylesheet" href="assets/style.css">
-  <script src="assets/theme.js" defer></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajouter une ponte</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <script src="assets/theme.js" defer></script>
 </head>
 <body>
 <div class="container">
-  <div class="header">
-    <div class="brand"><a class="btn secondary" href="index.php">← Retour</a></div>
-    <button class="theme-toggle" onclick="toggleTheme()">🌙/☀️</button>
-  </div>
+    <div class="header">
+        <div class="brand"><a class="btn secondary" href="index.php">← Retour</a></div>
+        <button class="theme-toggle" onclick="toggleTheme()">🌙/☀️</button>
+    </div>
 
-  <div class="card">
-    <h2>Ajouter une ponte</h2>
-    <form method="post">
-      <label>Mâle :</label>
-      <select name="male" required>
-        <option value="">-- Choisir --</option>
-        <?php foreach($males as $m): ?>
-          <option value="<?= $m['id'] ?>"><?= h($m['name']) ?></option>
-        <?php endforeach; ?>
-      </select><br>
+    <div class="card">
+        <h2>Ajouter une ponte</h2>
+        <form method="post">
+            <div class="form-group">
+                <label for="gestation_id">Accouplement :</label>
+                <select id="gestation_id" name="gestation_id" required>
+                    <option value="">-- Choisir un accouplement --</option>
+                    <?php foreach($gestations as $g): ?>
+                        <option value="<?= (int)$g['id'] ?>">
+                            <?= h($g['female_name']) ?> & <?= h($g['male_name']) ?> (Accouplement du <?= date('d/m/Y', strtotime($g['pairing_date'])) ?>)
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
 
-      <label>Femelle :</label>
-      <select name="female" required>
-        <option value="">-- Choisir --</option>
-        <?php foreach($females as $f): ?>
-          <option value="<?= $f['id'] ?>"><?= h($f['name']) ?></option>
-        <?php endforeach; ?>
-      </select><br>
+            <div class="form-group">
+                <label for="lay_date">Date de ponte :</label>
+                <input type="date" id="lay_date" name="lay_date" required>
+            </div>
 
-      <label>Date de ponte :</label>
-      <input type="date" name="lay_date" required><br>
+            <div class="form-group">
+                <label for="egg_count">Nombre d'œufs :</label>
+                <input type="number" id="egg_count" name="egg_count" value="0" min="0">
+            </div>
 
-      <label>Nombre d'œufs :</label>
-      <input type="number" name="egg_count" value="0" min="0"><br>
+            <div class="form-group">
+                <label for="comment">Commentaire :</label>
+                <textarea id="comment" name="comment"></textarea>
+            </div>
 
-      <label>Commentaire :</label>
-      <textarea name="comment"></textarea><br>
-
-      <button class="btn" type="submit">Ajouter</button>
-    </form>
-  </div>
+            <button class="btn" type="submit">Ajouter</button>
+        </form>
+    </div>
 </div>
 </body>
 </html>
