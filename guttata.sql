@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : localhost
--- Généré le : mar. 16 sep. 2025 à 07:04
+-- Généré le : jeu. 18 sep. 2025 à 09:00
 -- Version du serveur : 10.11.13-MariaDB-0ubuntu0.24.04.1
 -- Version de PHP : 8.3.6
 
@@ -73,7 +73,9 @@ CREATE TABLE `feedings` (
   `date` date NOT NULL,
   `meal_type` varchar(255) DEFAULT NULL,
   `count` tinyint(4) NOT NULL DEFAULT 1,
-  `prey_type` enum('vivant','mort','congelé') NOT NULL,
+  `prey_type` varchar(100) DEFAULT NULL,
+  `prey_state` varchar(50) DEFAULT NULL,
+  `meal_size` varchar(50) DEFAULT NULL,
   `refused` tinyint(1) NOT NULL DEFAULT 0,
   `comment` text DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
