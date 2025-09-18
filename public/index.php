@@ -291,35 +291,45 @@ try {
             <a class="btn secondary" href="https://billouetaudrey.ovh/gestion_naissances/">⚙️ Gestion des ventes/dépenses</a> 
             <a class="btn secondary" href="stats.php">📊 Statistiques</a>          
             <a class="btn secondary" href="https://www.morphmarket.com/c/reptiles/colubrids/corn-snakes/genetic-calculator/" target="_blank">🧬 Génétique</a>
-          
         </div> 
     </div> 
       
-    <?php if ($alert_hungry_baby): ?>
-        <div class="card alert warning">
-            ⚠️ Attention : au moins un bébé n'a pas mangé depuis plus de 7 jours !
-        </div>
-    <?php endif; ?>
-    <?php if (!empty($alert_hungry_subadults)): ?>
-        <div class="card alert warning">
-            ⚠️ Attention, ces sub-adultes n'ont pas mangé depuis plus de 7 jours :
-            <ul>
-                <?php foreach ($alert_hungry_subadults as $snake_name): ?>
-                    <li><?= h($snake_name) ?></li>
-                <?php endforeach; ?>
-            </ul>
-        </div>
-    <?php endif; ?>
-    <?php if (!empty($alert_hungry_adults)): ?>
-        <div class="card alert warning">
-            ⚠️ Attention, ces adultes n'ont pas mangé depuis plus de 7 jours :
-            <ul>
-                <?php foreach ($alert_hungry_adults as $snake_name): ?>
-                    <li><?= h($snake_name) ?></li>
-                <?php endforeach; ?>
-            </ul>
-        </div>
-    <?php endif; ?>
+    <div class="card">
+        <details>
+            <summary>
+                <h2>⚠️ Alertes</h2>
+            </summary>
+            <?php if ($alert_hungry_baby): ?>
+                <div class="card alert warning" style="margin-bottom: 1rem;">
+                    ⚠️ Attention : au moins un bébé n'a pas mangé depuis plus de 7 jours !
+                </div>
+            <?php endif; ?>
+            <?php if (!empty($alert_hungry_subadults)): ?>
+                <div class="card alert warning" style="margin-bottom: 1rem;">
+                    ⚠️ Attention, ces sub-adultes n'ont pas mangé depuis plus de 7 jours :
+                    <ul>
+                        <?php foreach ($alert_hungry_subadults as $snake_name): ?>
+                            <li><?= h($snake_name) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            <?php endif; ?>
+            <?php if (!empty($alert_hungry_adults)): ?>
+                <div class="card alert warning">
+                    ⚠️ Attention, ces adultes n'ont pas mangé depuis plus de 7 jours :
+                    <ul>
+                        <?php foreach ($alert_hungry_adults as $snake_name): ?>
+                            <li><?= h($snake_name) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            <?php endif; ?>
+            <?php if (!$alert_hungry_baby && empty($alert_hungry_subadults) && empty($alert_hungry_adults)): ?>
+                <div class="helper">🎉 Aucune alerte en cours. Tous les serpents ont été nourris récemment.</div>
+            <?php endif; ?>
+        </details>
+    </div>
+
     <div class="card"> 
         <details> 
             <summary> 
@@ -413,11 +423,6 @@ try {
 
     <div class="card"> 
         <h2>Mes serpents</h2> 
-        <div style="margin-bottom: 1rem;">
-            <button type="button" class="btn primary" onclick="printCouple()">
-                🖨️ Créer une étiquette de couple
-            </button>
-        </div>
         <?php if (empty($snakes)): ?> 
             <div class="helper">Aucun serpent pour l'instant.</div> 
         <?php else: ?> 
@@ -447,6 +452,11 @@ try {
             </details> 
             <details style="margin-top:1rem;"> 
                 <summary><h3>🟢 Adultes (> 2 ans) (<?= count($adults) ?>)</h3></summary> 
+                <div style="margin-bottom: 1rem;">
+                    <button type="button" class="btn primary" onclick="printCouple()">
+                        🖨️ Créer une étiquette de couple
+                    </button>
+                </div>
                 <form method="get" action="bulk_edit_snakes.php"> 
                     <label style="margin-bottom: 1rem; font-weight: bold;"> 
                         <input type="checkbox" class="select-all" id="select-all-adults"> 
@@ -534,7 +544,7 @@ try {
                     <th>Nb œufs</th> 
                     <th>Éclosion min. (55J)</th>
                     <th>Éclosion max. (61J)</th>
-                    <th>Temps restant</th> 
+                    <th>Jours restant</th> 
                     <th>Commentaire</th> 
                     <th>Action</th> 
                 </tr> 
@@ -629,22 +639,22 @@ try {
                 } 
             }); 
         }); 
-    }); 
 
-    // Fonction pour gérer l'impression d'un couple
-    function printCouple() {
-        const checkedSnakes = document.querySelectorAll('input[name="snake_ids[]"]:checked');
+        // Fonction pour gérer l'impression d'un couple
+        function printCouple() {
+            const checkedSnakes = document.querySelectorAll('input[name="snake_ids[]"]:checked');
 
-        if (checkedSnakes.length !== 2) {
-            alert("Veuillez sélectionner exactement deux serpents pour créer une étiquette de couple.");
-            return;
+            if (checkedSnakes.length !== 2) {
+                alert("Veuillez sélectionner exactement deux serpents pour créer une étiquette de couple.");
+                return;
+            }
+
+            const id1 = checkedSnakes[0].value;
+            const id2 = checkedSnakes[1].value;
+
+            window.open(`print.php?id1=${id1}&id2=${id2}`, '_blank');
         }
-
-        const id1 = checkedSnakes[0].value;
-        const id2 = checkedSnakes[1].value;
-
-        window.open(`print.php?id1=${id1}&id2=${id2}`, '_blank');
-    }
+    });
 </script>
 </body> 
 </html>
