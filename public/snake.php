@@ -20,7 +20,7 @@ if (!$snake) {
     exit;
 }
 
-// Récupération des repas du serpent avec le type de repas et le type de proie
+// Récupération des repas du serpent
 $feedingsStmt = $pdo->prepare("
     SELECT f.*
     FROM feedings f
@@ -240,40 +240,48 @@ define('THUMB_DIR', 'uploads/thumbnails/');
         <p>Nombre de repas pris : <strong><?= (int)$mealCount ?></strong></p>
 
         <?php if ($feedings): ?>
-            <div style="overflow:auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Type de repas</th>
-                            <th>Type de proie</th>
-                            <th>Nombre</th>
-                            <th>Refusé</th>
-                            <th>Commentaire</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($feedings as $f): ?>
+            <form action="bulk_edit_feeding.php" method="get">
+                <input type="hidden" name="snake_id" value="<?= (int)$snake['id'] ?>">
+                <div style="overflow:auto;">
+                    <table>
+                        <thead>
                             <tr>
-                                <td><?= date('d/m/Y', strtotime($f['date'])) ?></td>
-                                <td><?= h($f['meal_type']) ?: 'N/A' ?></td>
-                                <td><?= h($f['prey_type']) ?: 'N/A' ?></td>
-                                <td><?= (int)$f['count'] ?></td>
-                                <td><?= $f['refused'] ? 'Oui' : 'Non' ?></td>
-                                <td><?= h($f['notes']) ?: 'N/A' ?></td>
-                                <td style="display:flex;gap:.4rem;">
-                                    <form method="post" action="delete_feeding.php" onsubmit="return confirm('Supprimer ce repas ?')">
-                                        <input type="hidden" name="id" value="<?= (int)$f['id'] ?>">
-                                        <input type="hidden" name="snake_id" value="<?= (int)$snake['id'] ?>">
-                                        <button class="btn danger" type="submit">🗑</button>
-                                    </form>
-                                </td>
+                                <th><button type="submit" class="btn primary small">Modifier la sélection</button></th>
+                                <th>Date</th>
+                                <th>Type de proie</th>
+                                <th>Type de rongeur</th>
+                                <th>Taille</th>
+                                <th>Nombre</th>
+                                <th>Refusé</th>
+                                <th>Commentaire</th>
+                                <th>Actions</th>
                             </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($feedings as $f): ?>
+                                <tr>
+                                    <td><input type="checkbox" name="feeding_ids[]" value="<?= (int)$f['id'] ?>"></td>
+                                    <td><?= date('d/m/Y', strtotime($f['date'])) ?></td>
+                                    <td><?= h($f['prey_state']) ?: 'N/A' ?></td>
+                                    <td><?= h($f['prey_type']) ?: 'N/A' ?></td>
+                                    <td><?= h($f['meal_type']) ?: 'N/A' ?></td>
+                                    <td><?= (int)$f['count'] ?></td>
+                                    <td><?= $f['refused'] ? 'Oui' : 'Non' ?></td>
+                                    <td><?= h($f['notes']) ?: 'N/A' ?></td>
+                                    <td style="display:flex;gap:.4rem;">
+                                        <a class="btn secondary" href="edit_feeding.php?id=<?= (int)$f['id'] ?>">Éditer</a>
+                                        <form method="post" action="delete_feeding.php" onsubmit="return confirm('Supprimer ce repas ?')">
+                                            <input type="hidden" name="id" value="<?= (int)$f['id'] ?>">
+                                            <input type="hidden" name="snake_id" value="<?= (int)$snake['id'] ?>">
+                                            <button class="btn danger" type="submit">🗑</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </form>
         <?php else: ?>
             <div class="helper">Aucun repas enregistré pour ce serpent.</div>
         <?php endif; ?>
@@ -300,9 +308,10 @@ define('THUMB_DIR', 'uploads/thumbnails/');
                         <?php foreach ($sheds as $s): ?>
                             <tr>
                                 <td><?= date('d/m/Y', strtotime($s['date'])) ?></td>
-<td><?= ($s['complete'] == 1) ? 'Complète' : 'Incomplète' ?></td>
+                                <td><?= ($s['complete'] == 1) ? 'Complète' : 'Incomplète' ?></td>
                                 <td><?= h($s['comment']) ?: 'N/A' ?></td>
                                 <td style="display:flex;gap:.4rem;">
+                                    <a class="btn secondary" href="edit_shed.php?id=<?= (int)$s['id'] ?>">Éditer</a>
                                     <form method="post" action="delete_shed.php" onsubmit="return confirm('Supprimer cette mue ?')">
                                         <input type="hidden" name="id" value="<?= (int)$s['id'] ?>">
                                         <input type="hidden" name="snake_id" value="<?= (int)$snake['id'] ?>">
