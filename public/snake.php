@@ -248,9 +248,9 @@ define('THUMB_DIR', 'uploads/thumbnails/');
                             <tr>
                                 <th><button type="submit" class="btn primary small">Modifier la sélection</button></th>
                                 <th>Date</th>
-                                <th>Type de proie</th>
                                 <th>Type de rongeur</th>
                                 <th>Taille</th>
+                                <th>Type de proie</th>
                                 <th>Nombre</th>
                                 <th>Refusé</th>
                                 <th>Commentaire</th>
@@ -262,9 +262,9 @@ define('THUMB_DIR', 'uploads/thumbnails/');
                                 <tr>
                                     <td><input type="checkbox" name="feeding_ids[]" value="<?= (int)$f['id'] ?>"></td>
                                     <td><?= date('d/m/Y', strtotime($f['date'])) ?></td>
-                                    <td><?= h($f['prey_state']) ?: 'N/A' ?></td>
                                     <td><?= h($f['prey_type']) ?: 'N/A' ?></td>
                                     <td><?= h($f['meal_type']) ?: 'N/A' ?></td>
+                                    <td><?= h($f['prey_state']) ?: 'N/A' ?></td>
                                     <td><?= (int)$f['count'] ?></td>
                                     <td><?= $f['refused'] ? 'Oui' : 'Non' ?></td>
                                     <td><?= h($f['notes']) ?: 'N/A' ?></td>
