@@ -54,13 +54,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // NOUVEAU : Combiner le type et la taille pour le champ meal_type de la base de données
     $meal_type = ($rongeur_type && $rongeur_size) ? $rongeur_type . ' ' . $rongeur_size : null;
     
+    // NOUVEAU : Récupérer l'état du repas
     $refused = isset($_POST['refused']) ? 1 : 0;
+    $pending = isset($_POST['pending']) ? 1 : 0;
     $notes = trim($_POST['notes'] ?? '');
 
     if ($snake_ids) {
-        $stmt = $pdo->prepare("INSERT INTO feedings (snake_id, date, count, prey_type, meal_type, refused, notes) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $pdo->prepare("INSERT INTO feedings (snake_id, date, count, prey_type, meal_type, refused, notes, pending) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
         foreach ($snake_ids as $sid) {
-            $stmt->execute([(int)$sid, $date, $count, $prey_type, $meal_type, $refused, $notes ?: null]);
+            $stmt->execute([(int)$sid, $date, $count, $prey_type, $meal_type, $refused, $notes ?: null, $pending]);
         }
         $done = true;
     }
@@ -90,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const defaultMealType = checkbox.dataset.mealType;
             const rongeurTypeSelect = document.querySelector('select[name="rongeur_type"]');
             const rongeurSizeSelect = document.querySelector('select[name="rongeur_size"]');
-
+            
             if (defaultMealType) {
                 const parts = defaultMealType.toLowerCase().split(' ');
                 let type = null;
@@ -119,6 +121,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.querySelector('form');
+            const refusedCheckbox = document.querySelector('input[name="refused"]');
+            const pendingCheckbox = document.querySelector('input[name="pending"]');
             
             // Gère la sélection automatique au chargement de la page si un serpent est pré-sélectionné
             const preselectedCheckbox = document.querySelector('input[type="checkbox"][name="snakes[]"][checked]');
@@ -133,6 +137,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     updateMealTypeSelections(target);
                 }
             });
+
+            // Gère la mutualité des cases à cocher
+            if (refusedCheckbox && pendingCheckbox) {
+                refusedCheckbox.addEventListener('change', () => {
+                    if (refusedCheckbox.checked) {
+                        pendingCheckbox.checked = false;
+                    }
+                });
+                pendingCheckbox.addEventListener('change', () => {
+                    if (pendingCheckbox.checked) {
+                        refusedCheckbox.checked = false;
+                    }
+                });
+            }
         });
     </script>
 </head>
@@ -220,8 +238,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <option value="adulte">Adulte</option>
                     </select>
                 </div>
-                <div>
-                    <label><input type="checkbox" name="refused" value="1"> Refusé</label>
+                <div style="display: flex; flex-direction: column; justify-content: flex-end;">
+                    <label>
+                        <input type="checkbox" name="refused" value="1"> Refusé
+                    </label>
+                    <label style="margin-top: 0.5rem;">
+                        <input type="checkbox" name="pending" value="1"> En attente
+                    </label>
                 </div>
             </div>
 
