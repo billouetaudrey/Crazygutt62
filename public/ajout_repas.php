@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/functions.php';
 
-// Rcuprer la liste des serpents, classe par leur type de repas par dfaut
+// Récupérer la liste des serpents, classée par leur type de repas par défaut
 $snakesByMealType = $pdo->query("
     SELECT * FROM snakes 
     ORDER BY default_meal_type ASC,
@@ -13,14 +13,14 @@ $snakesByMealType = $pdo->query("
 // On va regrouper les serpents par type de repas
 $groupedSnakes = [];
 foreach ($snakesByMealType as $s) {
-    $mealType = $s['default_meal_type'] ?: 'Non dfini';
+    $mealType = $s['default_meal_type'] ?: 'Non défini';
     if (!isset($groupedSnakes[$mealType])) {
         $groupedSnakes[$mealType] = [];
     }
     $groupedSnakes[$mealType][] = $s;
 }
 
-// Rcuprer l'ID du serpent depuis l'URL si elle est prsente
+// Récupérer l'ID du serpent depuis l'URL si elle est présente
 $preselectedSnakeId = isset($_GET['snake_id']) ? (int)$_GET['snake_id'] : null;
 $preselectedSnake = null;
 if ($preselectedSnakeId) {
@@ -31,13 +31,13 @@ if ($preselectedSnakeId) {
 
 $done = false;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Rcuprer les IDs des serpents cochs
+    // Récupérer les IDs des serpents cochés
     $snake_ids = $_POST['snakes'] ?? [];
     
-    // Ajouter l'ID du serpent pr-slectionn si il a t envoy via le champ cach
+    // Ajouter l'ID du serpent pré-sélectionné si il a été envoyé via le champ caché
     if (isset($_POST['preselected_snake_id'])) {
         $preselectedId = (int)$_POST['preselected_snake_id'];
-        // On s'assure qu'il n'est pas dj dans le tableau pour viter les doublons
+        // On s'assure qu'il n'est pas déjà dans le tableau pour éviter les doublons
         if (!in_array($preselectedId, $snake_ids)) {
             $snake_ids[] = $preselectedId;
         }
@@ -45,13 +45,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $date = $_POST['date'] ?? date('Y-m-d');
     $count = (int)($_POST['count'] ?? 1);
-    $prey_type = in_array($_POST['prey_type'] ?? '', ['vivant','mort','congel']) ? $_POST['prey_type'] : 'mort';
+    $prey_type = in_array($_POST['prey_type'] ?? '', ['vivant','mort','congelé']) ? $_POST['prey_type'] : 'mort';
     
-    // NOUVEAU : Rcuprer le type et la taille du rongeur sparment
+    // NOUVEAU : Récupérer le type et la taille du rongeur séparément
     $rongeur_type = $_POST['rongeur_type'] ?? null;
     $rongeur_size = $_POST['rongeur_size'] ?? null;
     
-    // NOUVEAU : Combiner le type et la taille pour le champ meal_type de la base de donnes
+    // NOUVEAU : Combiner le type et la taille pour le champ meal_type de la base de données
     $meal_type = ($rongeur_type && $rongeur_size) ? $rongeur_type . ' ' . $rongeur_size : null;
     
     $refused = isset($_POST['refused']) ? 1 : 0;
@@ -70,12 +70,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="fr">
 <head>
     <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ajouter repas</title>
     <link rel="stylesheet" href="assets/style.css">
     <script src="assets/theme.js" defer></script>
     <script>
-        // Fonction pour tout cocher/dcocher
+        // Fonction pour tout cocher/décocher
         function toggleAll(source, group) {
             const checkboxes = document.querySelectorAll('input[data-group="' + group + '"]');
             checkboxes.forEach(cb => {
@@ -84,6 +84,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             });
         }
+
+        // Fonction unique pour gérer la sélection automatique
+        function updateMealTypeSelections(checkbox) {
+            const defaultMealType = checkbox.dataset.mealType;
+            const rongeurTypeSelect = document.querySelector('select[name="rongeur_type"]');
+            const rongeurSizeSelect = document.querySelector('select[name="rongeur_size"]');
+
+            if (defaultMealType) {
+                const parts = defaultMealType.toLowerCase().split(' ');
+                let type = null;
+                let size = null;
+                
+                const typesPossibles = ['souris', 'rat', 'mastomys'];
+                const taillesPossibles = ['rosé', 'blanchon', 'sauteuse', 'adulte'];
+                
+                parts.forEach(part => {
+                    if (typesPossibles.includes(part)) {
+                        type = part;
+                    }
+                    if (taillesPossibles.includes(part)) {
+                        size = part;
+                    }
+                });
+                
+                if (type && rongeurTypeSelect.querySelector(`option[value="${type}"]`)) {
+                    rongeurTypeSelect.value = type;
+                }
+                if (size && rongeurSizeSelect.querySelector(`option[value="${size}"]`)) {
+                    rongeurSizeSelect.value = size;
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.querySelector('form');
+            
+            // Gère la sélection automatique au chargement de la page si un serpent est pré-sélectionné
+            const preselectedCheckbox = document.querySelector('input[type="checkbox"][name="snakes[]"][checked]');
+            if (preselectedCheckbox) {
+                updateMealTypeSelections(preselectedCheckbox);
+            }
+
+            // Écoute les changements sur les cases à cocher pour une mise à jour dynamique
+            form.addEventListener('change', (event) => {
+                const target = event.target;
+                if (target.type === 'checkbox' && target.name === 'snakes[]' && target.checked) {
+                    updateMealTypeSelections(target);
+                }
+            });
+        });
     </script>
 </head>
 <body>
@@ -122,10 +172,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <?php foreach ($snakes as $s): ?>
                             <label>
                                 <?php if ($preselectedSnakeId == (int)$s['id']): ?>
-                                    <input type="checkbox" name="snakes[]" value="<?= (int)$s['id'] ?>" data-group="<?= h($mealType) ?>" checked disabled>
+                                    <input type="checkbox" name="snakes[]" value="<?= (int)$s['id'] ?>" data-group="<?= h($mealType) ?>" data-meal-type="<?= h($s['default_meal_type']) ?>" checked>
                                     <input type="hidden" name="preselected_snake_id" value="<?= (int)$s['id'] ?>">
                                 <?php else: ?>
-                                    <input type="checkbox" name="snakes[]" value="<?= (int)$s['id'] ?>" data-group="<?= h($mealType) ?>">
+                                    <input type="checkbox" name="snakes[]" value="<?= (int)$s['id'] ?>" data-group="<?= h($mealType) ?>" data-meal-type="<?= h($s['default_meal_type']) ?>">
                                 <?php endif; ?>
                                 <?= h($s['name']) ?>
                             </label>
