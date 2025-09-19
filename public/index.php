@@ -141,7 +141,7 @@ try {
             if ($needs_feeding_alert) $alert_hungry_adults[] = $s['name'];
         }
     }
-      
+    
     // Définir le chemin de base pour les vignettes
     define('THUMB_DIR', 'uploads/thumbnails/');
 
@@ -190,7 +190,7 @@ try {
         <?php 
         return ob_get_clean(); 
     } 
-      
+    
     // Petite fonction pour générer le tableau des bébés 
     function render_snake_table($list, $pdo) { 
         if (!$list) { 
@@ -293,7 +293,7 @@ try {
             <a class="btn secondary" href="https://www.morphmarket.com/c/reptiles/colubrids/corn-snakes/genetic-calculator/" target="_blank">🧬 Génétique</a>
         </div> 
     </div> 
-      
+    
     <div class="card">
         <details>
             <summary>
@@ -408,7 +408,7 @@ try {
             </div> 
         </div> 
     </div> 
-      
+    
     <div class="card" style="text-align:center;"> 
         <h2>Répartition par type de repas</h2> 
         <div style="display:flex; justify-content:space-around; margin-top:1rem;"> 
@@ -593,8 +593,8 @@ try {
 
     <div align="center" class="card"> 
         <div style="overflow:auto;"> 
-            <a class="btn" href="ajout_repas.php?snake_id=<?= (int)($snakes[0]['id'] ?? 0) ?>">+ Ajouter un repas</a> 
-            <a class="btn" href="ajout_mue.php?snake_id=<?= (int)($snakes[0]['id'] ?? 0) ?>">+ Ajouter une mue</a> 
+            <a class="btn" href="ajout_repas.php">+ Ajouter un repas</a> 
+            <a class="btn" href="ajout_mue.php">+ Ajouter une mue</a> 
         </div> 
     </div> 
 </div> 
