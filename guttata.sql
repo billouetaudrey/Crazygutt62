@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : localhost
--- Généré le : ven. 19 sep. 2025 à 15:44
+-- Généré le : ven. 19 sep. 2025 à 16:48
 -- Version du serveur : 10.11.13-MariaDB-0ubuntu0.24.04.1
 -- Version de PHP : 8.3.6
 
@@ -83,7 +83,8 @@ CREATE TABLE `feedings` (
   `type` varchar(50) NOT NULL DEFAULT 'repas',
   `value` varchar(255) DEFAULT NULL,
   `notes` text DEFAULT NULL,
-  `baby_id` int(11) DEFAULT NULL
+  `baby_id` int(11) DEFAULT NULL,
+  `pending` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
