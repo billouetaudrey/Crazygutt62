@@ -154,6 +154,12 @@ define('THUMB_DIR', 'uploads/thumbnails/');
                         </select>
                     </div>
                     <div style="grid-column: 1 / 3;">
+                        <label>
+                            <input type="checkbox" name="ready_to_breed" <?= ($snake['ready_to_breed'] == 1) ? 'checked' : '' ?>>
+                            Prêt pour la reproduction
+                        </label>
+                    </div>
+                    <div style="grid-column: 1 / 3;">
                         <label>Commentaire</label>
                         <textarea name="comment" rows="3"><?= h($snake['comment']) ?></textarea>
                     </div>
@@ -172,8 +178,9 @@ define('THUMB_DIR', 'uploads/thumbnails/');
             Année de naissance : <?= h($snake['birth_year']) ?: 'N/A' ?><br>
             Poids : <?= ($snake['weight'] !== null) ? h($snake['weight']) . ' g' : 'N/A' ?><br>
             Type de repas par défaut : <?= h($snake['default_meal_type']) ?: 'N/A' ?><br>
-            Commentaire : <?= $snake['comment'] ? nl2br(h($snake['comment'])) : 'N/A' ?>
-<div class="card">
+            Commentaire : <?= $snake['comment'] ? nl2br(h($snake['comment'])) : 'N/A' ?><br>
+            Prêt pour la reproduction : <strong><?= ($snake['ready_to_breed'] == 1) ? 'Oui' : 'Non' ?></strong> </p>
+        <div class="card">
     <h3>Supprimer ce serpent</h3>
     <p>
         Attention : Cette action est irréversible et supprimera toutes les informations associées à ce serpent (repas, mues, photos).
@@ -182,8 +189,7 @@ define('THUMB_DIR', 'uploads/thumbnails/');
         <input type="hidden" name="id" value="<?= (int)$snake['id'] ?>">
         <button type="submit" class="btn danger full-width">Supprimer le serpent</button>
     </form>
-</div>        
-</p>
+</div>
     </div>
 
     ---
