@@ -3,50 +3,50 @@ try {
     require_once __DIR__ . '/../includes/db.php';
     require_once __DIR__ . '/../includes/functions.php';
 
-    // Handle form submission to add feedings
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $ids = $_POST['snake_ids'] ?? [];
-        
-        // NOUVEAU : Récupérer le type et la taille du rongeur séparément
-        $rongeur_type = trim($_POST['rongeur_type'] ?? '');
-        $rongeur_size = trim($_POST['rongeur_size'] ?? '');
-
-        // NOUVEAU : Combiner le type et la taille pour le champ meal_type
-        $meal_type = ($rongeur_type && $rongeur_size) ? $rongeur_type . ' ' . $rongeur_size : null;
-
-        $prey_type = trim($_POST['prey_type'] ?? '');
-        $date = trim($_POST['date'] ?? '');
-        $count = (int)($_POST['count'] ?? 1);
-        $refused = isset($_POST['refused']) ? 1 : 0;
-        $notes = trim($_POST['notes'] ?? '');
-
-        if (empty($ids) || empty($meal_type) || empty($date)) {
-            die('Erreur : Tous les champs requis doivent être remplis.');
-        }
-
-        $pdo->beginTransaction();
-        $stmt = $pdo->prepare('INSERT INTO feedings (snake_id, date, meal_type, prey_type, count, refused, notes) VALUES (?, ?, ?, ?, ?, ?, ?)');
-        foreach ($ids as $id) {
-            $stmt->execute([$id, $date, $meal_type, $prey_type, $count, $refused, $notes]);
-        }
-        $pdo->commit();
-        header('Location: ' . base_url('index.php'));
-        exit;
-    }
-
-    // Get snake IDs and pre-selected meal type from URL
+    // Regrouper les serpents sélectionnés par leur type de repas par défaut
     $snakeIds = $_GET['snake_ids'] ?? [];
-    $preselectedMealType = $_GET['meal_type'] ?? '';
-
     if (empty($snakeIds)) {
         die('Aucun serpent sélectionné.');
     }
 
-    // Fetch snake data
     $in = str_repeat('?,', count($snakeIds) - 1) . '?';
-    $stmt = $pdo->prepare("SELECT id, name, default_meal_type FROM snakes WHERE id IN ($in) ORDER BY name");
+    $stmt = $pdo->prepare("SELECT id, name, default_meal_type FROM snakes WHERE id IN ($in) ORDER BY default_meal_type, name");
     $stmt->execute($snakeIds);
-    $snakes = $stmt->fetchAll();
+    $selectedSnakes = $stmt->fetchAll();
+
+    $groupedSnakes = [];
+    foreach ($selectedSnakes as $s) {
+        $mealType = $s['default_meal_type'] ?: 'Non défini';
+        if (!isset($groupedSnakes[$mealType])) {
+            $groupedSnakes[$mealType] = [];
+        }
+        $groupedSnakes[$mealType][] = $s;
+    }
+
+    // Gérer la soumission du formulaire
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $date = trim($_POST['date'] ?? '');
+        $prey_type = trim($_POST['prey_type'] ?? '');
+        $count = (int)($_POST['count'] ?? 1);
+        $refused = isset($_POST['refused']) ? 1 : 0;
+        $notes = trim($_POST['notes'] ?? '');
+
+        $pdo->beginTransaction();
+        $stmt = $pdo->prepare('INSERT INTO feedings (snake_id, date, meal_type, prey_type, count, refused, notes) VALUES (?, ?, ?, ?, ?, ?, ?)');
+
+        foreach ($_POST['groups'] as $meal_type_group => $group_data) {
+            $meal_type = $group_data['rongeur_type'] . ' ' . $group_data['rongeur_size'];
+            $snake_ids = $group_data['snake_ids'] ?? [];
+
+            foreach ($snake_ids as $id) {
+                $stmt->execute([(int)$id, $date, $meal_type, $prey_type, $count, $refused, $notes]);
+            }
+        }
+
+        $pdo->commit();
+        header('Location: ' . base_url('index.php'));
+        exit;
+    }
 
 } catch (PDOException $e) {
     die("Erreur de connexion à la base de données : " . $e->getMessage());
@@ -69,33 +69,51 @@ try {
     </div>
 
     <div class="card">
-        <h2>Ajouter un repas pour <?= count($snakes) ?> serpent(s)</h2>
+        <h2>Ajouter un repas pour <?= count($selectedSnakes) ?> serpent(s)</h2>
+        
         <form method="post" action="bulk_repas.php">
-            <?php foreach ($snakes as $s): ?>
-                <input type="hidden" name="snake_ids[]" value="<?= (int)$s['id'] ?>">
-            <?php endforeach; ?>
             
+            <?php foreach ($groupedSnakes as $mealType => $snakes): ?>
+                <div class="group-repas" style="border: 1px solid #ccc; padding: 1rem; margin-top: 1rem;">
+                    <h3>Groupe : <?= h(ucfirst($mealType)) ?></h3>
+                    
+                    <p>Serpents concernés :</p>
+                    <ul>
+                        <?php foreach ($snakes as $s): ?>
+                            <li><?= h($s['name']) ?></li>
+                            <input type="hidden" name="groups[<?= h($mealType) ?>][snake_ids][]" value="<?= (int)$s['id'] ?>">
+                        <?php endforeach; ?>
+                    </ul>
+
+                    <div class="grid">
+                        <div>
+                            <label>Type de rongeur</label>
+                            <select name="groups[<?= h($mealType) ?>][rongeur_type]" required>
+                                <option value="souris" <?= (strpos($mealType, 'souris') !== false) ? 'selected' : '' ?>>Souris</option>
+                                <option value="rat" <?= (strpos($mealType, 'rat') !== false) ? 'selected' : '' ?>>Rat</option>
+                                <option value="mastomys" <?= (strpos($mealType, 'mastomys') !== false) ? 'selected' : '' ?>>Mastomys</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Taille du rongeur</label>
+                            <select name="groups[<?= h($mealType) ?>][rongeur_size]" required>
+                                <option value="rosé" <?= (strpos($mealType, 'rosé') !== false) ? 'selected' : '' ?>>Rosé</option>
+                                <option value="blanchon" <?= (strpos($mealType, 'blanchon') !== false) ? 'selected' : '' ?>>Blanchon</option>
+                                <option value="sauteuse" <?= (strpos($mealType, 'sauteuse') !== false) ? 'selected' : '' ?>>Sauteuse</option>
+                                <option value="adulte" <?= (strpos($mealType, 'adulte') !== false) ? 'selected' : '' ?>>Adulte</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+
+            <hr style="margin-top: 2rem;">
+
+            <h3>Détails du repas (communs à tous les serpents)</h3>
             <div class="grid">
                 <div>
                     <label>Date du repas</label>
                     <input type="date" name="date" value="<?= date('Y-m-d') ?>" required>
-                </div>
-                <div>
-                    <label>Type de rongeur</label>
-                    <select name="rongeur_type" required>
-                        <option value="souris">Souris</option>
-                        <option value="rat">Rat</option>
-                        <option value="mastomys">Mastomys</option>
-                    </select>
-                </div>
-                <div>
-                    <label>Taille du rongeur</label>
-                    <select name="rongeur_size" required>
-                        <option value="rosé">Rosé</option>
-                        <option value="blanchon">Blanchon</option>
-                        <option value="sauteuse">Sauteuse</option>
-                        <option value="adulte">Adulte</option>
-                    </select>
                 </div>
                 <div>
                     <label>Type de proie</label>
@@ -116,6 +134,7 @@ try {
                     </select>
                 </div>
             </div>
+            
             <div style="margin-top: 1rem;">
                 <label>
                     <input type="checkbox" name="refused" value="1"> Repas refusé
@@ -125,15 +144,16 @@ try {
                 <label>Notes (facultatif)</label>
                 <textarea name="notes" placeholder="Ex. A mangé facilement, a eu du mal, etc."></textarea>
             </div>
+            
             <div style="margin-top: 1rem;">
                 <button type="submit" class="btn ok">Enregistrer le repas</button>
             </div>
         </form>
         
         <div style="margin-top: 2rem;">
-            <h3>Serpents concernés :</h3>
+            <h3>Récapitulatif de la sélection :</h3>
             <ul>
-                <?php foreach ($snakes as $s): ?>
+                <?php foreach ($selectedSnakes as $s): ?>
                     <li><?= h($s['name']) ?> (Repas par défaut : <?= h($s['default_meal_type'] ?: 'Non défini') ?>)</li>
                 <?php endforeach; ?>
             </ul>
