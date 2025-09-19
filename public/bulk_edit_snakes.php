@@ -15,9 +15,14 @@ try {
                 $birth_year = (int)($_POST['birth_year'][$id] ?? 0);
                 $weight = is_numeric($_POST['weight'][$id] ?? '') ? (float)$_POST['weight'][$id] : null;
                 $comment = trim($_POST['comment'][$id] ?? '');
+                $default_meal_type = $_POST['default_meal_type'][$id] ?? null;
+                
+                // Récupère la valeur de la case à cocher pour cet ID.
+                // Si la case n'est pas cochée, elle ne sera pas dans le tableau POST.
+                $ready_to_breed = isset($_POST['ready_to_breed'][$id]) ? 1 : 0; 
 
-                $stmt = $pdo->prepare('UPDATE snakes SET name = ?, sex = ?, morph = ?, birth_year = ?, weight = ?, comment = ? WHERE id = ?');
-                $stmt->execute([$name, $sex, $morph, $birth_year, $weight, $comment, $id]);
+                $stmt = $pdo->prepare('UPDATE snakes SET name = ?, sex = ?, morph = ?, birth_year = ?, weight = ?, comment = ?, default_meal_type = ?, ready_to_breed = ? WHERE id = ?');
+                $stmt->execute([$name, $sex, $morph, $birth_year, $weight, $comment, $default_meal_type, $ready_to_breed, $id]);
             }
             $pdo->commit();
             header('Location: ' . base_url('index.php'));
@@ -67,7 +72,9 @@ try {
                             <th>Phase</th>
                             <th>Année de naissance</th>
                             <th>Poids (g)</th>
+                            <th>Type de repas par défaut</th>
                             <th>Commentaire</th>
+                            <th>Prêt pour la reproduction</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -85,7 +92,19 @@ try {
                             <td><input type="text" name="morph[<?= (int)$s['id'] ?>]" value="<?= h($s['morph']) ?>"></td>
                             <td><input type="number" name="birth_year[<?= (int)$s['id'] ?>]" value="<?= h($s['birth_year']) ?>"></td>
                             <td><input type="number" step="0.01" name="weight[<?= (int)$s['id'] ?>]" value="<?= h($s['weight']) ?>"></td>
+                            <td>
+                                <select name="default_meal_type[<?= (int)$s['id'] ?>]">
+                                    <option value="" <?= ($s['default_meal_type'] === null) ? 'selected' : '' ?>>(Aucun)</option>
+                                    <option value="rosé" <?= ($s['default_meal_type'] === 'rosé') ? 'selected' : '' ?>>Rosé</option>
+                                    <option value="blanchon" <?= ($s['default_meal_type'] === 'blanchon') ? 'selected' : '' ?>>Blanchon</option>
+                                    <option value="sauteuse" <?= ($s['default_meal_type'] === 'sauteuse') ? 'selected' : '' ?>>Sauteuse</option>
+                                    <option value="adulte" <?= ($s['default_meal_type'] === 'adulte') ? 'selected' : '' ?>>Adulte</option>
+                                </select>
+                            </td>
                             <td><input type="text" name="comment[<?= (int)$s['id'] ?>]" value="<?= h($s['comment']) ?>"></td>
+                            <td>
+                                <input type="checkbox" name="ready_to_breed[<?= (int)$s['id'] ?>]" value="1" <?= ($s['ready_to_breed'] == 1) ? 'checked' : '' ?>>
+                            </td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
