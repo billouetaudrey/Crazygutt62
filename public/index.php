@@ -87,6 +87,15 @@ try {
     ");
     $gestationsStmt->execute();
     $gestations = $gestationsStmt->fetchAll();
+    
+    // NOUVEAU: Récupérer les serpents avec des repas en attente
+    $pending_snakes = $pdo->query("
+        SELECT s.name
+        FROM snakes s
+        JOIN feedings f ON s.id = f.snake_id
+        WHERE f.pending = 1 AND f.refused = 0
+        GROUP BY s.id
+    ")->fetchAll(PDO::FETCH_COLUMN);
 
     // Sépare les serpents par catégorie d'âge et récupère la dernière photo
     // + Ajout des drapeaux d'alerte pour les repas
@@ -299,6 +308,16 @@ try {
             <summary>
                 <h2>⚠️ Alertes</h2>
             </summary>
+            <?php if (!empty($pending_snakes)): ?>
+                <div class="card alert warning" style="margin-bottom: 1rem;">
+                    ⏳ **Repas en attente :** Ces serpents n'ont pas encore eu leur repas :
+                    <ul>
+                        <?php foreach ($pending_snakes as $snake_name): ?>
+                            <li><?= h($snake_name) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            <?php endif; ?>
             <?php if ($alert_hungry_baby): ?>
                 <div class="card alert warning" style="margin-bottom: 1rem;">
                     ⚠️ Attention : au moins un bébé n'a pas mangé depuis plus de 7 jours !
@@ -324,7 +343,7 @@ try {
                     </ul>
                 </div>
             <?php endif; ?>
-            <?php if (!$alert_hungry_baby && empty($alert_hungry_subadults) && empty($alert_hungry_adults)): ?>
+            <?php if (!$alert_hungry_baby && empty($alert_hungry_subadults) && empty($alert_hungry_adults) && empty($pending_snakes)): ?>
                 <div class="helper">🎉 Aucune alerte en cours. Tous les serpents ont été nourris récemment.</div>
             <?php endif; ?>
         </details>
