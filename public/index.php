@@ -552,7 +552,7 @@ try {
     
     <div class="card"> 
         <h3>Pontes</h3> 
-        <a class="btn" href="ajout_ponte.php">+ Ajouter ponte</a> 
+        <a class="btn" href="add_clutch.php">+ Ajouter ponte</a> 
     <div style="overflow-x: auto;">
         <table> 
             <thead> 
@@ -612,8 +612,8 @@ try {
 
     <div align="center" class="card"> 
         <div style="overflow:auto;"> 
-            <a class="btn" href="ajout_repas.php">+ Ajouter un repas</a> 
-            <a class="btn" href="ajout_mue.php">+ Ajouter une mue</a> 
+            <a class="btn" href="add_feeding.php">+ Ajouter un repas</a> 
+            <a class="btn" href="add_shed.php">+ Ajouter une mue</a> 
         </div> 
     </div> 
 </div> 
