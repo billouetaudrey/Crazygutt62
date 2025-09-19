@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : localhost
--- Généré le : jeu. 18 sep. 2025 à 09:00
+-- Généré le : ven. 19 sep. 2025 à 15:44
 -- Version du serveur : 10.11.13-MariaDB-0ubuntu0.24.04.1
 -- Version de PHP : 8.3.6
 
@@ -150,7 +150,8 @@ CREATE TABLE `snakes` (
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `default_meal_type` varchar(50) DEFAULT NULL,
   `meal_type` varchar(50) NOT NULL DEFAULT 'inconnu',
-  `profile_photo_id` int(11) DEFAULT NULL
+  `profile_photo_id` int(11) DEFAULT NULL,
+  `ready_to_breed` tinyint(1) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
