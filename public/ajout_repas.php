@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $date = $_POST['date'] ?? date('Y-m-d');
     $count = (int)($_POST['count'] ?? 1);
-    $prey_type = in_array($_POST['prey_type'] ?? '', ['vivant','mort','congelé']) ? $_POST['prey_type'] : 'mort';
+    $prey_type = in_array($_POST['prey_type'] ?? '', ['vivant','mort','congelé']) ? $_POST['prey_type'] : 'congelé';
     
     // NOUVEAU : Récupérer le type et la taille du rongeur séparément
     $rongeur_type = $_POST['rongeur_type'] ?? null;
@@ -218,7 +218,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <select name="prey_type">
                         <option value="vivant">Vivant</option>
                         <option value="mort">Mort</option>
-                        <option value="congelé">Congelé</option>
+                        <option value="congelé" selected>Congelé</option>
                     </select>
                 </div>
                 <div>
