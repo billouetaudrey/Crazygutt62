@@ -11,7 +11,7 @@ Compatible smartphone (Testé sur chrome Andeoid uniquement)
 - Âge calculé automatiquement à partir de l'année de naissance.
 - Sexe coloré (bleu = mâle, rose = femelle).
 - Morph, poids (facultatif), commentaire libre.
-- Pontes, date d'éclosion théorique calculé automatiquement ( 60 jours )
+- Accouplement, pontes, date d'éclosion théorique calculé automatiquement
 - Édition de serpent multiple
 - Affichage répartition des ages, répartition des types de repas
 - Alerte repas à +7 jours ( reset ignoré si " refus " )
