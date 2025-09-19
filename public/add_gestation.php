@@ -2,16 +2,13 @@
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/functions.php';
 
-// Sélectionnez les mâles et les femelles de plus de 2 ans
-$current_year = (int)date('Y');
-$breeding_age_year = $current_year - 2;
-
-$males = $pdo->prepare("SELECT * FROM snakes WHERE sex='M' AND birth_year <= ? ORDER BY name");
-$males->execute([$breeding_age_year]);
+// Sélectionnez les mâles et les femelles qui sont marqués comme prêts pour la reproduction
+$males = $pdo->prepare("SELECT * FROM snakes WHERE sex='M' AND ready_to_breed=1 ORDER BY name");
+$males->execute();
 $males = $males->fetchAll();
 
-$females = $pdo->prepare("SELECT * FROM snakes WHERE sex='F' AND birth_year <= ? ORDER BY name");
-$females->execute([$breeding_age_year]);
+$females = $pdo->prepare("SELECT * FROM snakes WHERE sex='F' AND ready_to_breed=1 ORDER BY name");
+$females->execute();
 $females = $females->fetchAll();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
