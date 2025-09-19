@@ -102,8 +102,8 @@ try {
                     <label>Type de proie</label>
                     <select name="prey_type" required>
                         <option value="vivant">Vivant</option>
-                        <option value="mort" selected>Mort</option>
-                        <option value="congelé">Congelé</option>
+                        <option value="mort">Mort</option>
+                        <option value="congelé" selected>Congelé</option>
                     </select>
                 </div>
                 <div>
