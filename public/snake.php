@@ -242,7 +242,7 @@ define('THUMB_DIR', 'uploads/thumbnails/');
 
     <div class="card">
         <h3>Repas</h3>
-        <a class="btn" href="ajout_repas.php?snake_id=<?= (int)$snake['id'] ?>">+ Ajouter un repas</a>
+        <a class="btn" href="add_feeding.php?snake_id=<?= (int)$snake['id'] ?>">+ Ajouter un repas</a>
         <p>Nombre de repas pris : <strong><?= (int)$mealCount ?></strong></p>
 
         <?php if ($feedings): ?>
@@ -299,7 +299,7 @@ define('THUMB_DIR', 'uploads/thumbnails/');
 
     <div class="card">
         <h3>Mues</h3>
-        <a class="btn" href="ajout_mue.php?snake_id=<?= (int)$snake['id'] ?>">+ Ajouter une mue</a>
+        <a class="btn" href="add_shed.php?snake_id=<?= (int)$snake['id'] ?>">+ Ajouter une mue</a>
         
         <?php if ($sheds): ?>
             <div style="overflow:auto;">
