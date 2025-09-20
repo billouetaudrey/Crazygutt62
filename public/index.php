@@ -312,55 +312,93 @@ try {
         <button class="theme-toggle" onclick="toggleTheme()" title="Basculer thème">🌙/☀️</button> 
         <div style="margin-top:1rem; text-align:right;"> 
             <a class="btn secondary" href="gestion_donnees.php">⚙️ Gestion des données</a>
-            <a class="btn secondary" href="https://billouetaudrey.ovh/gestion_naissances/">⚙️ Gestion des ventes/dépenses</a>         
+            <a class="btn secondary" href="https://billouetaudrey.ovh/gestion_naissances/">⚙️ Gestion des ventes/dépenses</a>
+            <a class="btn secondary" href="https://billouetaudrey.ovh/rongeurs/">⚙️ Gestion des rongeurs</a>            
             <a class="btn secondary" href="stats.php">📊 Statistiques</a>          
             <a class="btn secondary" href="https://www.morphmarket.com/c/reptiles/colubrids/corn-snakes/genetic-calculator/" target="_blank">🧬 Génétique</a>
         </div> 
     </div> 
     
     <div class="card">
-        <details>
+        <details open>
             <summary>
                 <h2>⚠️ Alertes</h2>
             </summary>
-            <?php if (!empty($pending_snakes)): ?>
-                <div class="card alert warning" style="margin-bottom: 1rem;">
-                    ⏳ **Repas en attente :** Ces serpents n'ont pas encore eu leur repas :
-                    <ul>
-                        <?php foreach ($pending_snakes as $snake_name): ?>
-                            <li><?= h($snake_name) ?></li>
-                        <?php endforeach; ?>
-                    </ul>
-                </div>
-            <?php endif; ?>
-            <?php if ($alert_hungry_baby): ?>
-                <div class="card alert warning" style="margin-bottom: 1rem;">
-                    ⚠️ Attention : au moins un bébé n'a pas mangé depuis plus de 7 jours !
-                </div>
-            <?php endif; ?>
-            <?php if (!empty($alert_hungry_subadults)): ?>
-                <div class="card alert warning" style="margin-bottom: 1rem;">
-                    ⚠️ Attention, ces sub-adultes n'ont pas mangé depuis plus de 7 jours :
-                    <ul>
-                        <?php foreach ($alert_hungry_subadults as $snake_name): ?>
-                            <li><?= h($snake_name) ?></li>
-                        <?php endforeach; ?>
-                    </ul>
-                </div>
-            <?php endif; ?>
-            <?php if (!empty($alert_hungry_adults)): ?>
-                <div class="card alert warning">
-                    ⚠️ Attention, ces adultes n'ont pas mangé depuis plus de 7 jours :
-                    <ul>
-                        <?php foreach ($alert_hungry_adults as $snake_name): ?>
-                            <li><?= h($snake_name) ?></li>
-                        <?php endforeach; ?>
-                    </ul>
-                </div>
-            <?php endif; ?>
-            <?php if (!$alert_hungry_baby && empty($alert_hungry_subadults) && empty($alert_hungry_adults) && empty($pending_snakes)): ?>
-                <div class="helper">🎉 Aucune alerte en cours. Tous les serpents ont été nourris récemment.</div>
-            <?php endif; ?>
+            <form action="update_feeding_status.php" method="post">
+                <?php if (!empty($pending_snakes)): ?>
+                    <div class="card alert warning" style="margin-bottom: 1rem;">
+                        <h3>⏳ Repas en attente</h3>
+                        <div style="overflow-x: auto;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Cocher</th>
+                                        <th>Serpent</th>
+                                        <th>Dernier repas</th>
+                                        <th>Type</th>
+                                        <th>Commentaire</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php
+                                    $pending_meals = $pdo->query("
+                                        SELECT f.id, s.name, f.date, f.meal_type, f.comment
+                                        FROM feedings f
+                                        JOIN snakes s ON s.id = f.snake_id
+                                        WHERE f.pending = 1 AND f.refused = 0
+                                        ORDER BY f.date DESC
+                                    ")->fetchAll();
+                                    ?>
+                                    <?php foreach ($pending_meals as $meal): ?>
+                                        <tr>
+                                            <td>
+                                                <input type="checkbox" name="feeding_ids[]" value="<?= (int)$meal['id'] ?>">
+                                            </td>
+                                            <td><?= h($meal['name']) ?></td>
+                                            <td><?= date('d/m/Y', strtotime($meal['date'])) ?></td>
+                                            <td><?= h($meal['meal_type']) ?></td>
+                                            <td><?= h($meal['comment']) ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div style="margin-top: 1rem;">
+                            <button type="submit" class="btn ok">Marquer comme donné</button>
+                        </div>
+                    </div>
+                <?php endif; ?>
+                
+                <?php if ($alert_hungry_baby): ?>
+                    <div class="card alert warning" style="margin-bottom: 1rem;">
+                        ⚠️ Attention : au moins un bébé n'a pas mangé depuis plus de 7 jours !
+                    </div>
+                <?php endif; ?>
+                <?php if (!empty($alert_hungry_subadults)): ?>
+                    <div class="card alert warning" style="margin-bottom: 1rem;">
+                        ⚠️ Attention, ces sub-adultes n'ont pas mangé depuis plus de 7 jours :
+                        <ul>
+                            <?php foreach ($alert_hungry_subadults as $snake_name): ?>
+                                <li><?= h($snake_name) ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
+                <?php if (!empty($alert_hungry_adults)): ?>
+                    <div class="card alert warning">
+                        ⚠️ Attention, ces adultes n'ont pas mangé depuis plus de 7 jours :
+                        <ul>
+                            <?php foreach ($alert_hungry_adults as $snake_name): ?>
+                                <li><?= h($snake_name) ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
+                
+                <?php if (!$alert_hungry_baby && empty($alert_hungry_subadults) && empty($alert_hungry_adults) && empty($pending_meals)): ?>
+                    <div class="helper">🎉 Aucune alerte en cours. Tous les serpents ont été nourris récemment.</div>
+                <?php endif; ?>
+            </form>
         </details>
     </div>
 
@@ -552,10 +590,10 @@ try {
                         }
 
                         $delete_form = '<form method="post" action="delete_gestation.php" onsubmit="return confirm(\'Supprimer cet accouplement ?\')">' .
-                                       '<input type="hidden" name="id" value="' . (int)$r['id'] . '">' .
-                                       '<input type="hidden" name="redirect_to" value="index.php">' .
-                                       '<button class="btn danger" type="submit">🗑</button>' .
-                                       '</form>';
+                                             '<input type="hidden" name="id" value="' . (int)$r['id'] . '">' .
+                                             '<input type="hidden" name="redirect_to" value="index.php">' .
+                                             '<button class="btn danger" type="submit">🗑</button>' .
+                                             '</form>';
 
                     } elseif ($r['type'] === 'clutch') {
                         $hatch_date_min = (new DateTime($r['lay_date']))->modify('+55 days');
@@ -576,10 +614,10 @@ try {
                         }
                         
                         $delete_form = '<form method="post" action="delete_clutch.php" onsubmit="return confirm(\'Supprimer cette ponte ?\')">' .
-                                       '<input type="hidden" name="id" value="' . (int)$r['id'] . '">' .
-                                       '<input type="hidden" name="redirect_to" value="index.php">' .
-                                       '<button class="btn danger" type="submit">🗑</button>' .
-                                       '</form>';
+                                             '<input type="hidden" name="id" value="' . (int)$r['id'] . '">' .
+                                             '<input type="hidden" name="redirect_to" value="index.php">' .
+                                             '<button class="btn danger" type="submit">🗑</button>' .
+                                             '</form>';
                     }
                 ?>
                 <tr>
