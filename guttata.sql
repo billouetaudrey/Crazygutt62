@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : localhost
--- Généré le : ven. 19 sep. 2025 à 16:48
+-- Généré le : sam. 20 sep. 2025 à 08:02
 -- Version du serveur : 10.11.13-MariaDB-0ubuntu0.24.04.1
 -- Version de PHP : 8.3.6
 
@@ -43,6 +43,21 @@ CREATE TABLE `babies` (
 CREATE TABLE `baby_parents` (
   `baby_id` int(11) NOT NULL,
   `snake_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `cares`
+--
+
+CREATE TABLE `cares` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `snake_id` int(11) NOT NULL,
+  `date` date NOT NULL,
+  `care_type` varchar(255) NOT NULL,
+  `comment` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -152,7 +167,8 @@ CREATE TABLE `snakes` (
   `default_meal_type` varchar(50) DEFAULT NULL,
   `meal_type` varchar(50) NOT NULL DEFAULT 'inconnu',
   `profile_photo_id` int(11) DEFAULT NULL,
-  `ready_to_breed` tinyint(1) DEFAULT 0
+  `ready_to_breed` tinyint(1) DEFAULT 0,
+  `care` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -183,6 +199,13 @@ ALTER TABLE `babies`
 --
 ALTER TABLE `baby_parents`
   ADD PRIMARY KEY (`baby_id`,`snake_id`),
+  ADD KEY `snake_id` (`snake_id`);
+
+--
+-- Index pour la table `cares`
+--
+ALTER TABLE `cares`
+  ADD PRIMARY KEY (`id`),
   ADD KEY `snake_id` (`snake_id`);
 
 --
@@ -248,6 +271,12 @@ ALTER TABLE `babies`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT pour la table `cares`
+--
+ALTER TABLE `cares`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT pour la table `clutches`
 --
 ALTER TABLE `clutches`
@@ -299,6 +328,12 @@ ALTER TABLE `snake_images`
 ALTER TABLE `baby_parents`
   ADD CONSTRAINT `baby_parents_ibfk_1` FOREIGN KEY (`baby_id`) REFERENCES `babies` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `baby_parents_ibfk_2` FOREIGN KEY (`snake_id`) REFERENCES `snakes` (`id`) ON DELETE CASCADE;
+
+--
+-- Contraintes pour la table `cares`
+--
+ALTER TABLE `cares`
+  ADD CONSTRAINT `cares_ibfk_1` FOREIGN KEY (`snake_id`) REFERENCES `snakes` (`id`) ON DELETE CASCADE;
 
 --
 -- Contraintes pour la table `clutches`
