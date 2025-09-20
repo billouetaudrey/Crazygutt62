@@ -614,6 +614,7 @@ try {
         <div style="overflow:auto;"> 
             <a class="btn" href="add_feeding.php">+ Ajouter un repas</a> 
             <a class="btn" href="add_shed.php">+ Ajouter une mue</a> 
+            <a class="btn" href="add_care.php">+ Ajouter un soin</a> 
         </div> 
     </div> 
 </div> 
