@@ -10,23 +10,21 @@ try {
         // Récupération des données du formulaire
         $date = trim($_POST['date'] ?? '');
         $count = (int)($_POST['count'] ?? 1);
-        $prey_type = trim($_POST['prey_type'] ?? '');
         
         $rongeur_type = trim($_POST['rongeur_type'] ?? '');
         $rongeur_size = trim($_POST['rongeur_size'] ?? '');
-        $meal_type = ($rongeur_type && $rongeur_size) ? $rongeur_type . ' ' . $rongeur_size : null;
+        $prey_type = trim($_POST['prey_type'] ?? '');
         
         $refused = isset($_POST['refused']) ? 1 : 0;
         $notes = trim($_POST['notes'] ?? '');
         $pending = isset($_POST['pending']) ? 1 : 0;
 
-        if (empty($ids) || empty($meal_type) || empty($date)) {
+        if (empty($ids) || empty($rongeur_type) || empty($rongeur_size) || empty($date)) {
             die('Erreur : Tous les champs requis doivent être remplis.');
         }
 
         $pdo->beginTransaction();
         
-        // ✅ CORRECTION : Ajout de 'meal_size' à la requête INSERT
         $stmt = $pdo->prepare('
             INSERT INTO feedings 
             (snake_id, date, meal_type, prey_type, meal_size, count, refused, pending, notes) 
@@ -36,9 +34,9 @@ try {
         foreach ($ids as $id) {
             $stmt->bindValue(1, (int)$id, PDO::PARAM_INT);
             $stmt->bindValue(2, $date, PDO::PARAM_STR);
-            $stmt->bindValue(3, $meal_type, PDO::PARAM_STR);
+            $stmt->bindValue(3, $rongeur_type, PDO::PARAM_STR);
             $stmt->bindValue(4, $prey_type, PDO::PARAM_STR);
-            $stmt->bindValue(5, $rongeur_size, PDO::PARAM_STR); // ✅ CORRECTION : Ajout de la taille du rongeur
+            $stmt->bindValue(5, $rongeur_size, PDO::PARAM_STR);
             $stmt->bindValue(6, (int)$count, PDO::PARAM_INT);
             $stmt->bindValue(7, (int)$refused, PDO::PARAM_INT);
             $stmt->bindValue(8, (int)$pending, PDO::PARAM_INT);
@@ -53,7 +51,6 @@ try {
 
     // Get snake IDs and pre-selected meal type from URL
     $snakeIds = $_GET['snake_ids'] ?? [];
-    $preselectedMealType = $_GET['meal_type'] ?? '';
 
     if (empty($snakeIds)) {
         die('Aucun serpent sélectionné.');
