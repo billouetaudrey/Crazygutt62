@@ -7,28 +7,44 @@ try {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $ids = $_POST['snake_ids'] ?? [];
         
-        // Combine rodent type and size for the meal_type field
+        // Récupération des données du formulaire
+        $date = trim($_POST['date'] ?? '');
+        $count = (int)($_POST['count'] ?? 1);
+        $prey_type = trim($_POST['prey_type'] ?? '');
+        
         $rongeur_type = trim($_POST['rongeur_type'] ?? '');
         $rongeur_size = trim($_POST['rongeur_size'] ?? '');
         $meal_type = ($rongeur_type && $rongeur_size) ? $rongeur_type . ' ' . $rongeur_size : null;
-
-        $prey_type = trim($_POST['prey_type'] ?? '');
-        $date = trim($_POST['date'] ?? '');
-        $count = (int)($_POST['count'] ?? 1);
+        
         $refused = isset($_POST['refused']) ? 1 : 0;
         $notes = trim($_POST['notes'] ?? '');
-        $pending = isset($_POST['pending']) ? 1 : 0; // NOUVEAU : Récupération du statut 'pending'
+        $pending = isset($_POST['pending']) ? 1 : 0;
 
         if (empty($ids) || empty($meal_type) || empty($date)) {
             die('Erreur : Tous les champs requis doivent être remplis.');
         }
 
         $pdo->beginTransaction();
-        // NOUVEAU : Ajout de la colonne 'pending' dans la requête
-        $stmt = $pdo->prepare('INSERT INTO feedings (snake_id, date, meal_type, prey_type, count, refused, pending, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+        
+        // ✅ CORRECTION : Ajout de 'meal_size' à la requête INSERT
+        $stmt = $pdo->prepare('
+            INSERT INTO feedings 
+            (snake_id, date, meal_type, prey_type, meal_size, count, refused, pending, notes) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ');
+        
         foreach ($ids as $id) {
-            // NOUVEAU : Ajout de la variable 'pending' dans l'exécution de la requête
-            $stmt->execute([$id, $date, $meal_type, $prey_type, $count, $refused, $pending, $notes]);
+            $stmt->bindValue(1, (int)$id, PDO::PARAM_INT);
+            $stmt->bindValue(2, $date, PDO::PARAM_STR);
+            $stmt->bindValue(3, $meal_type, PDO::PARAM_STR);
+            $stmt->bindValue(4, $prey_type, PDO::PARAM_STR);
+            $stmt->bindValue(5, $rongeur_size, PDO::PARAM_STR); // ✅ CORRECTION : Ajout de la taille du rongeur
+            $stmt->bindValue(6, (int)$count, PDO::PARAM_INT);
+            $stmt->bindValue(7, (int)$refused, PDO::PARAM_INT);
+            $stmt->bindValue(8, (int)$pending, PDO::PARAM_INT);
+            $stmt->bindValue(9, $notes !== '' ? $notes : null, PDO::PARAM_STR);
+            
+            $stmt->execute();
         }
         $pdo->commit();
         header('Location: ' . base_url('index.php'));
@@ -99,7 +115,7 @@ try {
                     </select>
                 </div>
                 <div>
-                    <label>Type de proie</label>
+                    <label>État de la proie</label>
                     <select name="prey_type" required>
                         <option value="vivant">Vivant</option>
                         <option value="mort">Mort</option>
