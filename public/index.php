@@ -276,6 +276,21 @@ try {
         return ob_get_clean(); 
     } 
 
+    // Combine gestations and clutches into a single array
+    $reproductions = [];
+    foreach ($gestations as $g) {
+        $reproductions[] = array_merge($g, ['type' => 'gestation', 'sort_date' => $g['pairing_date']]);
+    }
+    foreach ($clutches as $c) {
+        $reproductions[] = array_merge($c, ['type' => 'clutch', 'sort_date' => $c['lay_date']]);
+    }
+
+    // Sort the combined array by date, descending
+    usort($reproductions, function($a, $b) {
+        return strtotime($b['sort_date']) - strtotime($a['sort_date']);
+    });
+
+
 } catch (PDOException $e) { 
     // Displays a database connection error 
     die("Erreur de connexion à la base de données : " . $e->getMessage()); 
@@ -297,7 +312,7 @@ try {
         <button class="theme-toggle" onclick="toggleTheme()" title="Basculer thème">🌙/☀️</button> 
         <div style="margin-top:1rem; text-align:right;"> 
             <a class="btn secondary" href="gestion_donnees.php">⚙️ Gestion des données</a>
-            <a class="btn secondary" href="https://billouetaudrey.ovh/gestion_naissances/">⚙️ Gestion des ventes/dépenses</a> 
+            <a class="btn secondary" href="https://billouetaudrey.ovh/gestion_naissances/">⚙️ Gestion des ventes/dépenses</a>         
             <a class="btn secondary" href="stats.php">📊 Statistiques</a>          
             <a class="btn secondary" href="https://www.morphmarket.com/c/reptiles/colubrids/corn-snakes/genetic-calculator/" target="_blank">🧬 Génétique</a>
         </div> 
@@ -492,123 +507,97 @@ try {
     </div> 
 
     <div class="card">
-        <h3>Accouplements</h3>
-        <a class="btn" href="add_gestation.php">+ Ajouter accouplement</a>
+        <h2>Reproduction</h2>
+        <div class="actions" style="margin-bottom: 1rem;">
+            <a class="btn" href="add_gestation.php">+ Accouplement</a>
+            <a class="btn" href="add_clutch.php">+ Ponte</a>
+        </div>
+        <?php if (empty($reproductions)): ?>
+            <div class="helper">Aucun événement de reproduction enregistré.</div>
+        <?php else: ?>
         <div style="overflow-x: auto;">
             <table>
                 <thead>
                     <tr>
-                        <th>Date accouplement</th>
+                        <th>Date</th>
+                        <th>Type</th>
                         <th>Père</th>
                         <th>Mère</th>
-                        <th>Ponte min. (35J)</th>
-                        <th>Ponte max. (43J)</th>
-                        <th>Jours restants</th>
-                        <th>Commentaire</th>
+                        <th>Détails</th>
+                        <th>Statut / Jours restants</th>
                         <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                <?php foreach ($gestations as $g):
+                <?php foreach ($reproductions as $r):
                     $today = new DateTime();
-                    $ponte_min_date = new DateTime($g['pairing_date']);
-                    $ponte_min_date->modify('+35 days');
-                    $ponte_max_date = new DateTime($g['pairing_date']);
-                    $ponte_max_date->modify('+43 days');
-                    
+                    $details = '';
                     $status = '';
-                    if ($today > $ponte_max_date) {
-                        $status = 'Terminé';
-                    } elseif ($today >= $ponte_min_date && $today <= $ponte_max_date) {
-                        $status = 'En cours';
-                    } else {
-                        $remaining_min = $today->diff($ponte_min_date)->days;
-                        $remaining_max = $today->diff($ponte_max_date)->days;
-                        $status = "J-$remaining_min à J-$remaining_max";
+                    $action_link = '';
+                    $delete_form = '';
+
+                    if ($r['type'] === 'gestation') {
+                        $ponte_min_date = (new DateTime($r['pairing_date']))->modify('+35 days');
+                        $ponte_max_date = (new DateTime($r['pairing_date']))->modify('+43 days');
+                        $details = h($r['comment']);
+                        
+                        if ($today > $ponte_max_date) {
+                            $status = 'Terminé';
+                        } elseif ($today >= $ponte_min_date && $today <= $ponte_max_date) {
+                            $status = 'En cours';
+                        } else {
+                            $remaining_min = $today->diff($ponte_min_date)->days;
+                            $remaining_max = $today->diff($ponte_max_date)->days;
+                            $status = "J-" . $remaining_min;
+                        }
+
+                        $delete_form = '<form method="post" action="delete_gestation.php" onsubmit="return confirm(\'Supprimer cet accouplement ?\')">' .
+                                       '<input type="hidden" name="id" value="' . (int)$r['id'] . '">' .
+                                       '<input type="hidden" name="redirect_to" value="index.php">' .
+                                       '<button class="btn danger" type="submit">🗑</button>' .
+                                       '</form>';
+
+                    } elseif ($r['type'] === 'clutch') {
+                        $hatch_date_min = (new DateTime($r['lay_date']))->modify('+55 days');
+                        $hatch_date_max = (new DateTime($r['lay_date']))->modify('+61 days');
+                        $details = (int)$r['egg_count'] . " œufs";
+                        if ($r['comment']) {
+                            $details .= ' - ' . h($r['comment']);
+                        }
+
+                        if ($today > $hatch_date_max) {
+                            $status = 'Éclos';
+                        } elseif ($today >= $hatch_date_min && $today <= $hatch_date_max) {
+                            $status = 'En cours';
+                        } else {
+                            $remaining_min = $today->diff($hatch_date_min)->days;
+                            $remaining_max = $today->diff($hatch_date_max)->days;
+                            $status = "J-" . $remaining_min;
+                        }
+                        
+                        $delete_form = '<form method="post" action="delete_clutch.php" onsubmit="return confirm(\'Supprimer cette ponte ?\')">' .
+                                       '<input type="hidden" name="id" value="' . (int)$r['id'] . '">' .
+                                       '<input type="hidden" name="redirect_to" value="index.php">' .
+                                       '<button class="btn danger" type="submit">🗑</button>' .
+                                       '</form>';
                     }
                 ?>
-<tr>
-    <td><?= date('d/m/Y', strtotime($g['pairing_date'])) ?></td>
-    <td><a href="snake.php?id=<?= (int)$g['male_id'] ?>"><?= h($g['male_name']) ?></a></td>
-    <td><a href="snake.php?id=<?= (int)$g['female_id'] ?>"><?= h($g['female_name']) ?></a></td>
-    <td><?= $ponte_min_date->format('d/m/Y') ?></td>
-    <td><?= $ponte_max_date->format('d/m/Y') ?></td>
-    <td><?= $status ?></td>
-    <td><?= h($g['comment']) ?></td>
-    <td>
-        <form method="post" action="delete_gestation.php" onsubmit="return confirm('Supprimer cet accouplement ?')">
-            <input type="hidden" name="id" value="<?= (int)$g['id'] ?>">
-            <input type="hidden" name="redirect_to" value="index.php">
-            <button class="btn danger" type="submit">🗑</button>
-        </form>
-    </td>
-</tr>
-
+                <tr>
+                    <td><?= date('d/m/Y', strtotime($r['sort_date'])) ?></td>
+                    <td><?= $r['type'] === 'gestation' ? 'Accouplement' : 'Ponte' ?></td>
+                    <td><a href="snake.php?id=<?= (int)$r['male_id'] ?>"><?= h($r['male_name']) ?></a></td>
+                    <td><a href="snake.php?id=<?= (int)$r['female_id'] ?>"><?= h($r['female_name']) ?></a></td>
+                    <td><?= $details ?></td>
+                    <td><?= $status ?></td>
+                    <td><?= $delete_form ?></td>
+                </tr>
                 <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
+        <?php endif; ?>
     </div>
-    
-    <div class="card"> 
-        <h3>Pontes</h3> 
-        <a class="btn" href="add_clutch.php">+ Ajouter ponte</a> 
-    <div style="overflow-x: auto;">
-        <table> 
-            <thead> 
-                <tr> 
-                    <th>Date ponte</th> 
-                    <th>Père</th> 
-                    <th>Mère</th> 
-                    <th>Nb œufs</th> 
-                    <th>Éclosion min. (55J)</th>
-                    <th>Éclosion max. (61J)</th>
-                    <th>Jours restant</th> 
-                    <th>Commentaire</th> 
-                    <th>Action</th> 
-                </tr> 
-            </thead> 
-            <tbody> 
-            <?php foreach ($clutches as $c): 
-                $today = new DateTime();
-                $hatch_date_min = new DateTime($c['lay_date']);
-                $hatch_date_min->modify('+55 days');
-                $hatch_date_max = new DateTime($c['lay_date']);
-                $hatch_date_max->modify('+61 days');
-                
-                $hatch_status = ''; 
-                if ($today > $hatch_date_max) { 
-                    $hatch_status = 'Éclos'; 
-                } elseif ($today >= $hatch_date_min && $today <= $hatch_date_max) {
-                    $hatch_status = 'En cours';
-                } else {
-                    $remaining_min = $today->diff($hatch_date_min)->days;
-                    $remaining_max = $today->diff($hatch_date_max)->days;
-                    $hatch_status = "J-$remaining_min à J-$remaining_max";
-                }
-            ?> 
-<tr> 
-    <td><?= date('d/m/Y', strtotime($c['lay_date'])) ?></td> 
-    <td><a href="snake.php?id=<?= (int)$c['male_id'] ?>"><?= h($c['male_name']) ?></a></td> 
-    <td><a href="snake.php?id=<?= (int)$c['female_id'] ?>"><?= h($c['female_name']) ?></a></td> 
-    <td><?= (int)$c['egg_count'] ?></td> 
-    <td><?= $hatch_date_min->format('d/m/Y') ?></td>
-    <td><?= $hatch_date_max->format('d/m/Y') ?></td>
-    <td><?= $hatch_status ?></td> 
-    <td><?= h($c['comment']) ?></td>
-    <td>
-        <form method="post" action="delete_clutch.php" onsubmit="return confirm('Supprimer cette ponte ?')"> 
-            <input type="hidden" name="id" value="<?= (int)$c['id'] ?>"> 
-            <input type="hidden" name="redirect_to" value="index.php"> 
-            <button class="btn danger" type="submit">🗑</button> 
-        </form> 
-    </td> 
-</tr>
 
-            <?php endforeach; ?> 
-            </tbody> 
-        </table> 
-    </div> 
 
     <div align="center" class="card"> 
         <div style="overflow:auto;"> 
