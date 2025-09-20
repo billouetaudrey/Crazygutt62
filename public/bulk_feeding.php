@@ -71,7 +71,7 @@ try {
 
     <div class="card">
         <h2>Ajouter un repas pour <?= count($snakes) ?> serpent(s)</h2>
-        <form method="post" action="bulk_repas.php">
+        <form method="post" action="bulk_feeding.php">
             <?php foreach ($snakes as $s): ?>
                 <input type="hidden" name="snake_ids[]" value="<?= (int)$s['id'] ?>">
             <?php endforeach; ?>
