@@ -36,12 +36,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $male_id = $gestation_data['male_id'];
             $female_id = $gestation_data['female_id'];
 
-            // Calculer la date d'éclosion estimée (moyenne 58 jours)
-            $hatch_date = date('Y-m-d', strtotime($lay_date . ' +58 days'));
-
             // Préparer la requête d'insertion d'une nouvelle ponte
-            $stmt_insert = $pdo->prepare("INSERT INTO clutches (male_id, female_id, lay_date, hatch_date, egg_count, comment, gestation_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            $stmt_insert->execute([$male_id, $female_id, $lay_date, $hatch_date, $egg_count, $comment, $gestation_id]);
+            // La colonne `hatch_date` est une colonne générée, elle ne doit pas être incluse dans la requête INSERT.
+            $stmt_insert = $pdo->prepare("INSERT INTO clutches (male_id, female_id, lay_date, egg_count, comment, gestation_id) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt_insert->execute([$male_id, $female_id, $lay_date, $egg_count, $comment, $gestation_id]);
 
             // Rediriger vers la page d'accueil
             header("Location: index.php");
