@@ -451,7 +451,7 @@ try {
                     <?= render_snake_table($babies, $pdo) ?> 
                     <div style="margin-top:1rem;"> 
                         <button type="submit" class="btn secondary">Éditer les bébés</button> 
-                        <button type="submit" formaction="bulk_repas.php?meal_type=rosé" class="btn secondary">Ajouter un repas</button>
+                        <button type="submit" formaction="bulk_feeding.php?meal_type=rosé" class="btn secondary">Ajouter un repas</button>
                     </div> 
                 </form> 
             </details> 
@@ -465,7 +465,7 @@ try {
                     <?= render_snake_cards($subadults, $pdo) ?> 
                     <div style="margin-top:1rem;"> 
                         <button type="submit" class="btn secondary">Éditer les sub-adultes</button> 
-                        <button type="submit" formaction="bulk_repas.php?meal_type=sauteuse" class="btn secondary">Ajouter un repas</button>
+                        <button type="submit" formaction="bulk_feeding.php?meal_type=sauteuse" class="btn secondary">Ajouter un repas</button>
                     </div> 
                 </form> 
             </details> 
@@ -484,7 +484,7 @@ try {
                     <?= render_snake_cards($adults, $pdo) ?> 
                     <div style="margin-top:1rem;"> 
                         <button type="submit" class="btn secondary">Éditer les adultes</button> 
-                        <button type="submit" formaction="bulk_repas.php?meal_type=adulte" class="btn secondary">Ajouter un repas</button>
+                        <button type="submit" formaction="bulk_feeding.php?meal_type=adulte" class="btn secondary">Ajouter un repas</button>
                     </div> 
                 </form> 
             </details> 
