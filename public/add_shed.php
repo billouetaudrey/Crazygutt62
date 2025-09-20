@@ -64,15 +64,15 @@ try {
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ajouter une mue</title>
-  <link rel="stylesheet" href="assets/style.css">
-  <script src="assets/theme.js" defer></script>
-  <script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajouter une mue</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <script src="assets/theme.js" defer></script>
+    <script>
         // Fonction pour tout cocher/décocher
         function toggleAll(source, group) {
-            const checkboxes = document.querySelectorAll('input[data-group="' + group + '"]');
+            const checkboxes = document.querySelectorAll(`input[name="snakes[]"][data-group="${group}"]`);
             checkboxes.forEach(cb => {
                 if (!cb.disabled) {
                     cb.checked = source.checked;
@@ -91,44 +91,47 @@ try {
     <div class="card">
         <h2>Ajouter une mue</h2>
         <form method="post">
-            <label>Date :</label>
-            <input type="date" name="date" value="<?= date('Y-m-d') ?>" required><br>
+            <input type="hidden" name="preselected_snake_id" value="<?= h($preselectedSnakeId) ?>">
 
-            <label><input type="checkbox" name="complete" checked> Mue complète</label><br>
+            <label>Date :</label>
+            <input type="date" name="date" value="<?= date('Y-m-d') ?>" required>
+            
+            <label><input type="checkbox" name="complete" checked> Mue complète</label>
 
             <label>Commentaire :</label>
-            <textarea name="comment"></textarea><br>
+            <textarea name="comment" rows="4"></textarea>
 
-            <h3>Sélectionnez les serpents :</h3>
-            <?php foreach ($groupedSnakes as $groupName => $snakes): ?>
-                <?php if (!empty($snakes)): ?>
-                    <details style="margin-top:1rem;">
-                        <summary>
-                            <h3>
-                                <?= h($groupName) ?>
-                                <small style="margin-left: .5rem;">
-                                    <label><input type="checkbox" onclick="toggleAll(this, '<?= h($groupName) ?>')"> Tout cocher</label>
-                                </small>
-                            </h3>
-                        </summary>
-                        <div class="snakes-grid">
-                            <?php foreach ($snakes as $s): ?>
-                                <label>
-                                    <?php if ($preselectedSnakeId == (int)$s['id']): ?>
-                                        <input type="checkbox" name="snakes[]" value="<?= (int)$s['id'] ?>" data-group="<?= h($groupName) ?>" checked disabled>
-                                        <input type="hidden" name="preselected_snake_id" value="<?= (int)$s['id'] ?>">
-                                    <?php else: ?>
-                                        <input type="checkbox" name="snakes[]" value="<?= (int)$s['id'] ?>" data-group="<?= h($groupName) ?>">
-                                    <?php endif; ?>
-                                    <?= h($s['name']) ?>
-                                </label><br>
-                            <?php endforeach; ?>
-                        </div>
-                    </details>
+            <hr>
+            <h3>Sélectionner les serpents concernés :</h3>
+            <?php foreach ($groupedSnakes as $groupName => $list): ?>
+                <?php if (!empty($list)): ?>
+                    <h4>
+                        <input type="checkbox" onclick="toggleAll(this, '<?= h($groupName) ?>')">
+                        <?= h($groupName) ?> (<?= count($list) ?>)
+                    </h4>
+                    <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                        <?php foreach ($list as $snake): ?>
+                            <?php 
+                                $checked = '';
+                                $disabled = '';
+                                if ($preselectedSnakeId && $snake['id'] == $preselectedSnakeId) {
+                                    $checked = 'checked';
+                                    $disabled = 'disabled';
+                                }
+                            ?>
+                            <label style="border:1px solid var(--border-color); padding:5px 10px; border-radius:5px; display:inline-flex; align-items:center; cursor:pointer;">
+                                <input type="checkbox" name="snakes[]" value="<?= (int)$snake['id'] ?>" <?= $checked ?> <?= $disabled ?> data-group="<?= h($groupName) ?>">
+                                <?= h($snake['name']) ?>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
                 <?php endif; ?>
             <?php endforeach; ?>
 
-            <button class="btn" type="submit">Ajouter</button>
+            <div style="margin-top:1rem;">
+                <button type="submit" class="btn ok">Enregistrer</button>
+                <a href="index.php" class="btn secondary">Annuler</a>
+            </div>
         </form>
     </div>
 </div>
