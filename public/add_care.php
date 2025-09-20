@@ -6,9 +6,15 @@ try {
     // Récupère l'ID du serpent depuis l'URL si elle est présente
     $preselectedSnakeId = isset($_GET['snake_id']) ? (int)$_GET['snake_id'] : null;
 
-    // Récupère la liste de tous les serpents
-    $snakes = $pdo->query("SELECT * FROM snakes ORDER BY name ASC")->fetchAll();
-
+    // Récupère la liste de tous les serpents (ou juste le serpent sélectionné si l'ID est fourni)
+    if ($preselectedSnakeId) {
+        $snakeStmt = $pdo->prepare("SELECT * FROM snakes WHERE id = ?");
+        $snakeStmt->execute([$preselectedSnakeId]);
+        $snakes = $snakeStmt->fetchAll();
+    } else {
+        $snakes = $pdo->query("SELECT * FROM snakes ORDER BY name ASC")->fetchAll();
+    }
+    
     // On va regrouper les serpents en deux catégories
     $groupedSnakes = [
         'Bébés' => [],
@@ -85,6 +91,7 @@ try {
 <body>
 <div class="container">
     <div class="header">
+        <a href="<?= $preselectedSnakeId ? 'snake.php?id=' . $preselectedSnakeId : 'index.php' ?>" class="btn secondary">← Retour</a>
         <div class="brand">✨ Ajouter un soin</div>
         <button class="theme-toggle" onclick="toggleTheme()" title="Basculer thème">🌙/☀️</button>
     </div>
@@ -140,7 +147,7 @@ try {
 
             <div style="margin-top:1rem;">
                 <button type="submit" class="btn ok">Enregistrer</button>
-                <a href="index.php" class="btn secondary">Annuler</a>
+                <a href="<?= $preselectedSnakeId ? 'snake.php?id=' . $preselectedSnakeId : 'index.php' ?>" class="btn secondary">Annuler</a>
             </div>
         </form>
     </div>
