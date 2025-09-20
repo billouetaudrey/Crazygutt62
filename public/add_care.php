@@ -39,9 +39,8 @@ try {
         $date = $_POST['date'] ?? null;
         $care_type = $_POST['care_type'] ?? null;
         $comment = $_POST['comment'] ?? '';
-
-        // Assurez-vous que l'ID pré-sélectionné est bien un entier et qu'il n'est pas déjà dans le tableau
         $preselectedIdFromPost = isset($_POST['preselected_snake_id']) ? (int)$_POST['preselected_snake_id'] : null;
+        
         if ($preselectedIdFromPost && !in_array($preselectedIdFromPost, $snake_ids)) {
             $snake_ids[] = $preselectedIdFromPost;
         }
@@ -51,12 +50,13 @@ try {
             foreach ($snake_ids as $sid) {
                 $stmt->execute([$sid, $date, $care_type, $comment]);
             }
-            header("Location: index.php");
+            
+            // Redirige vers la page du premier serpent sélectionné
+            header("Location: snake.php?id=" . (int)$snake_ids[0]);
             exit;
         }
     }
 } catch (PDOException $e) {
-    // Affiche un message d'erreur plus clair si la contrainte de clé étrangère échoue
     if ($e->getCode() == '23000') {
         die("Erreur : La contrainte de clé étrangère a échoué. Assurez-vous que le serpent existe avant d'ajouter un soin.");
     }
@@ -75,7 +75,6 @@ try {
         function toggleAll(source, group) {
             const checkboxes = document.querySelectorAll(`input[name="snakes[]"][data-group="${group}"]`);
             checkboxes.forEach(cb => {
-                // Ne pas modifier la case à cocher si elle est désactivée
                 if (!cb.disabled) {
                     cb.checked = source.checked;
                 }
