@@ -50,6 +50,12 @@ $profilePhotoIdStmt = $pdo->prepare("SELECT profile_photo_id FROM snakes WHERE i
 $profilePhotoIdStmt->execute([$id]);
 $profilePhotoId = $profilePhotoIdStmt->fetchColumn();
 
+// --- NOUVEAU CODE POUR LES SOINS ---
+$caresStmt = $pdo->prepare("SELECT * FROM cares WHERE snake_id = ? ORDER BY date DESC");
+$caresStmt->execute([$id]);
+$cares = $caresStmt->fetchAll();
+// ------------------------------------
+
 // Définir le chemin de base pour les uploads et les vignettes
 define('UPLOAD_DIR', 'uploads/');
 define('THUMB_DIR', 'uploads/thumbnails/');
@@ -268,8 +274,8 @@ define('THUMB_DIR', 'uploads/thumbnails/');
                                 <td><input type="checkbox" name="feeding_ids[]" value="<?= (int)$f['id'] ?>" form="bulk-edit-form"></td>
                                 <td><?= date('d/m/Y', strtotime($f['date'])) ?></td>
                                 <td><?= h($f['meal_type']) ?: 'N/A' ?></td>
+                                <td><?= h($f['meal_size']) ?: 'N/A' ?></td>
                                 <td><?= h($f['prey_type']) ?: 'N/A' ?></td>
-                                <td><?= h($f['prey_state']) ?: 'N/A' ?></td>
                                 <td><?= (int)$f['count'] ?></td>
                                 <td><?= $f['refused'] ? 'Oui' : 'Non' ?></td>
                                 <td><?= $f['pending'] ? 'Oui' : 'Non' ?></td>
@@ -333,6 +339,47 @@ define('THUMB_DIR', 'uploads/thumbnails/');
             </div>
         <?php else: ?>
             <div class="helper">Aucune mue enregistrée pour ce serpent.</div>
+        <?php endif; ?>
+    </div>
+
+    ---
+
+    <div class="card">
+        <h3>Soins</h3>
+        <a class="btn" href="add_care.php?snake_id=<?= (int)$snake['id'] ?>">+ Ajouter un soin</a>
+        
+        <?php if ($cares): ?>
+            <div style="overflow:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type de soin</th>
+                            <th>Commentaire</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($cares as $c): ?>
+                            <tr>
+                                <td><?= date('d/m/Y', strtotime($c['date'])) ?></td>
+                                <td><?= h($c['care_type']) ?></td>
+                                <td><?= h($c['comment']) ?: 'N/A' ?></td>
+                                <td style="display:flex;gap:.4rem;">
+                                    <a class="btn secondary" href="edit_care.php?id=<?= (int)$c['id'] ?>">Éditer</a>
+                                    <form method="post" action="delete_care.php" onsubmit="return confirm('Supprimer ce soin ?')">
+                                        <input type="hidden" name="id" value="<?= (int)$c['id'] ?>">
+                                        <input type="hidden" name="snake_id" value="<?= (int)$snake['id'] ?>">
+                                        <button class="btn danger" type="submit">🗑</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php else: ?>
+            <div class="helper">Aucun soin enregistré pour ce serpent.</div>
         <?php endif; ?>
     </div>
 </div>
