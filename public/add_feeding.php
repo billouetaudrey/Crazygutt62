@@ -45,24 +45,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $date = $_POST['date'] ?? date('Y-m-d');
     $count = (int)($_POST['count'] ?? 1);
-    $prey_type = in_array($_POST['prey_type'] ?? '', ['vivant','mort','congelé']) ? $_POST['prey_type'] : 'congelé';
     
     // NOUVEAU : Récupérer le type et la taille du rongeur séparément
     $rongeur_type = $_POST['rongeur_type'] ?? null;
     $rongeur_size = $_POST['rongeur_size'] ?? null;
     
-    // NOUVEAU : Combiner le type et la taille pour le champ meal_type de la base de données
+    // NOUVEAU : Combiner le type et la taille pour le champ meal_type
     $meal_type = ($rongeur_type && $rongeur_size) ? $rongeur_type . ' ' . $rongeur_size : null;
+
+    // NOUVEAU : Récupérer l'état de la proie
+    $prey_type = in_array($_POST['prey_type'] ?? '', ['vivant','mort','congelé']) ? $_POST['prey_type'] : 'congelé';
     
-    // NOUVEAU : Récupérer l'état du repas
+    // NOUVEAU : Récupérer l'état du repas (refusé, en attente)
     $refused = isset($_POST['refused']) ? 1 : 0;
     $pending = isset($_POST['pending']) ? 1 : 0;
     $notes = trim($_POST['notes'] ?? '');
 
     if ($snake_ids) {
-        $stmt = $pdo->prepare("INSERT INTO feedings (snake_id, date, count, prey_type, meal_type, refused, notes, pending) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        // CORRIGÉ : Ajuster la requête pour insérer les bonnes valeurs dans les bonnes colonnes
+        $stmt = $pdo->prepare("INSERT INTO feedings (snake_id, date, count, meal_type, prey_type, meal_size, refused, notes, pending) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
         foreach ($snake_ids as $sid) {
-            $stmt->execute([(int)$sid, $date, $count, $prey_type, $meal_type, $refused, $notes ?: null, $pending]);
+            $stmt->execute([(int)$sid, $date, $count, $meal_type, $prey_type, $rongeur_size, $refused, $notes ?: null, $pending]);
         }
         $done = true;
     }
@@ -214,7 +217,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </select>
                 </div>
                 <div>
-                    <label>Type de proie</label>
+                    <label>État de la proie</label>
                     <select name="prey_type">
                         <option value="vivant">Vivant</option>
                         <option value="mort">Mort</option>
