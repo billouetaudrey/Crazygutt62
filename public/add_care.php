@@ -39,10 +39,11 @@ try {
         $date = $_POST['date'] ?? null;
         $care_type = $_POST['care_type'] ?? null;
         $comment = $_POST['comment'] ?? '';
-        
-        // Ajoute l'ID pré-sélectionné même s'il est désactivé
-        if (isset($_POST['preselected_snake_id']) && !in_array($_POST['preselected_snake_id'], $snake_ids)) {
-            $snake_ids[] = (int)$_POST['preselected_snake_id'];
+
+        // Assurez-vous que l'ID pré-sélectionné est bien un entier et qu'il n'est pas déjà dans le tableau
+        $preselectedIdFromPost = isset($_POST['preselected_snake_id']) ? (int)$_POST['preselected_snake_id'] : null;
+        if ($preselectedIdFromPost && !in_array($preselectedIdFromPost, $snake_ids)) {
+            $snake_ids[] = $preselectedIdFromPost;
         }
 
         if (!empty($snake_ids) && $date && $care_type) {
@@ -55,6 +56,10 @@ try {
         }
     }
 } catch (PDOException $e) {
+    // Affiche un message d'erreur plus clair si la contrainte de clé étrangère échoue
+    if ($e->getCode() == '23000') {
+        die("Erreur : La contrainte de clé étrangère a échoué. Assurez-vous que le serpent existe avant d'ajouter un soin.");
+    }
     die("Erreur de connexion à la base de données : " . $e->getMessage());
 }
 ?>
@@ -70,7 +75,10 @@ try {
         function toggleAll(source, group) {
             const checkboxes = document.querySelectorAll(`input[name="snakes[]"][data-group="${group}"]`);
             checkboxes.forEach(cb => {
-                cb.checked = source.checked;
+                // Ne pas modifier la case à cocher si elle est désactivée
+                if (!cb.disabled) {
+                    cb.checked = source.checked;
+                }
             });
         }
     </script>
@@ -84,7 +92,9 @@ try {
 
     <div class="card">
         <form method="post">
-            <input type="hidden" name="preselected_snake_id" value="<?= h($preselectedSnakeId) ?>">
+            <?php if ($preselectedSnakeId): ?>
+                <input type="hidden" name="preselected_snake_id" value="<?= h($preselectedSnakeId) ?>">
+            <?php endif; ?>
 
             <label for="care_type">Type de soin :</label>
             <select id="care_type" name="care_type" required>
