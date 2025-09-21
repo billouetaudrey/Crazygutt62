@@ -104,7 +104,7 @@ try {
     $subadults = [];
     $adults = [];
 
-    $alert_hungry_baby = false;
+    $alert_hungry_babies = [];
     $alert_hungry_subadults = [];
     $alert_hungry_adults = [];
 
@@ -141,7 +141,7 @@ try {
 
         if ($age < 1) {
             $babies[] = $s;
-            if ($needs_feeding_alert) $alert_hungry_baby = true;
+            if ($needs_feeding_alert) $alert_hungry_babies[] = $s['name'];
         } elseif ($age >= 1 && $age < 2) {
             $subadults[] = $s;
             if ($needs_feeding_alert) $alert_hungry_subadults[] = $s['name'];
@@ -369,11 +369,17 @@ try {
                     </div>
                 <?php endif; ?>
                 
-                <?php if ($alert_hungry_baby): ?>
-                    <div class="card alert warning" style="margin-bottom: 1rem;">
-                        ⚠️ Attention : au moins un bébé n'a pas mangé depuis plus de 7 jours !
-                    </div>
-                <?php endif; ?>
+<?php if (!empty($alert_hungry_babies)): ?>
+    <div class="card alert warning" style="margin-bottom: 1rem;">
+        ⚠️ Attention, ces bébés n'ont pas mangé depuis plus de 7 jours :
+        <ul>
+            <?php foreach ($alert_hungry_babies as $snake_name): ?>
+                <li><?= h($snake_name) ?></li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
+<?php endif; ?>
+
                 <?php if (!empty($alert_hungry_subadults)): ?>
                     <div class="card alert warning" style="margin-bottom: 1rem;">
                         ⚠️ Attention, ces sub-adultes n'ont pas mangé depuis plus de 7 jours :
@@ -395,7 +401,7 @@ try {
                     </div>
                 <?php endif; ?>
                 
-                <?php if (!$alert_hungry_baby && empty($alert_hungry_subadults) && empty($alert_hungry_adults) && empty($pending_meals)): ?>
+<?php if (empty($alert_hungry_babies) && empty($alert_hungry_subadults) && empty($alert_hungry_adults) && empty($pending_meals)): ?>
                     <div class="helper">🎉 Aucune alerte en cours. Tous les serpents ont été nourris récemment.</div>
                 <?php endif; ?>
             </form>
