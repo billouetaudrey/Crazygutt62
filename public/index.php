@@ -310,13 +310,18 @@ try {
     <div class="header"> 
         <div class="brand">🐍 Pantherophis — Suivi</div> 
         <button class="theme-toggle" onclick="toggleTheme()" title="Basculer thème">🌙/☀️</button> 
-        <div style="margin-top:1rem; text-align:right;"> 
-            <a class="btn secondary" href="gestion_donnees.php">⚙️ Gestion des données</a>
-            <a class="btn secondary" href="https://billouetaudrey.ovh/gestion_naissances/">⚙️ Gestion des ventes/dépenses</a>
-            <a class="btn secondary" href="https://billouetaudrey.ovh/rongeurs/">⚙️ Gestion des rongeurs</a>            
-            <a class="btn secondary" href="stats.php">📊 Statistiques</a>          
+        <div class="header-actions">
+            <a class="btn secondary" href="stats.php">📊 Statistiques</a>
             <a class="btn secondary" href="https://www.morphmarket.com/c/reptiles/colubrids/corn-snakes/genetic-calculator/" target="_blank">🧬 Génétique</a>
-        </div> 
+            <div class="dropdown">
+                <button class="btn secondary dropdown-toggle">⚙️ Gestion</button>
+                <div class="dropdown-menu">
+                    <a class="btn secondary" href="gestion_donnees.php">📂 Gestion des données</a>
+                    <a class="btn secondary" href="https://billouetaudrey.ovh/gestion_naissances/">🐍 Gestion des ventes/dépenses</a>
+                    <a class="btn secondary" href="https://billouetaudrey.ovh/rongeurs/">🐭 Gestion des rongeurs</a>
+                </div>
+            </div>
+        </div>
     </div> 
     
     <div class="card">
@@ -706,6 +711,23 @@ try {
             const id2 = checkedSnakes[1].value;
 
             window.open(`print.php?id1=${id1}&id2=${id2}`, '_blank');
+        }
+        
+        // Gestion du menu déroulant au clic
+        const dropdown = document.querySelector('.dropdown');
+        if (dropdown) {
+            const dropdownToggle = dropdown.querySelector('.dropdown-toggle');
+            dropdownToggle.addEventListener('click', (event) => {
+                event.stopPropagation();
+                dropdown.classList.toggle('active');
+            });
+
+            // Cacher le menu si l'on clique en dehors
+            document.addEventListener('click', (event) => {
+                if (!dropdown.contains(event.target)) {
+                    dropdown.classList.remove('active');
+                }
+            });
         }
     });
 </script>
