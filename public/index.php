@@ -316,7 +316,7 @@ try {
             <div class="dropdown">
                 <button class="btn secondary dropdown-toggle">⚙️ Gestion</button>
                 <div class="dropdown-menu">
-                    <a class="btn secondary" href="gestion_donnees.php">📂 Gestion des données</a>
+                    <a class="btn secondary" href="data.php">📂 Gestion des données</a>
                     <a class="btn secondary" href="https://billouetaudrey.ovh/gestion_naissances/">🐍 Gestion des ventes/dépenses</a>
                     <a class="btn secondary" href="https://billouetaudrey.ovh/rongeurs/">🐭 Gestion des rongeurs</a>
                 </div>
