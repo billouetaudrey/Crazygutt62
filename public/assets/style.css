@@ -309,8 +309,9 @@ body.light .badge-female:hover {
 
 /* Conteneur des cartes corrigé */
 .snake-cards-container {
-    column-count: 3;       /* nombre de colonnes */
-    column-gap: 1.5rem;    /* espace entre colonnes */
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Crée des colonnes flexibles */
+    gap: 1.5rem; /* Espace entre les cartes */
     padding: 1rem;
 }
 
@@ -433,3 +434,61 @@ body.light .badge-female:hover {
     border-color: #ffc107; /* Jaune orangé */
     background-color: #fff3cd; /* Fond jaune très clair */
 } 
+/* Styles pour le menu déroulant */
+.header-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.6rem 0.9rem;
+    border-radius: 0.6rem;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 0.6rem;
+    padding: 0.5rem;
+    z-index: 20;
+    min-width: 200px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.dropdown-menu a.btn {
+    width: 100%;
+    text-align: left;
+}
+
+/* Affichage au survol sur PC */
+@media (min-width: 768px) {
+    .dropdown:hover .dropdown-menu {
+        display: flex;
+    }
+}
+
+/* Affichage au clic sur mobile (et PC) */
+.dropdown.active .dropdown-menu {
+    display: flex;
+}
