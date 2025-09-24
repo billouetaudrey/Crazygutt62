@@ -1,4 +1,5 @@
 <?php
+session_start(); // Ajout de cette ligne
 try {
     require_once __DIR__ . '/../includes/db.php';
     require_once __DIR__ . '/../includes/functions.php';
@@ -52,13 +53,31 @@ try {
         }
 
         if (!empty($snake_ids) && $date && $care_type) {
+            // Démarre une transaction pour que toutes les insertions réussissent ou échouent ensemble
+            $pdo->beginTransaction();
+
             $stmt = $pdo->prepare("INSERT INTO cares (snake_id, date, care_type, comment) VALUES (?, ?, ?, ?)");
             foreach ($snake_ids as $sid) {
                 $stmt->execute([$sid, $date, $care_type, $comment]);
             }
+
+            // Valide la transaction
+            $pdo->commit();
             
+            // Récupère le nom du premier serpent pour le message
+            $firstSnakeId = $snake_ids[0];
+            $snakeNameStmt = $pdo->prepare("SELECT name FROM snakes WHERE id = ?");
+            $snakeNameStmt->execute([$firstSnakeId]);
+            $snake = $snakeNameStmt->fetch();
+
+            if ($snake) {
+                $_SESSION['success_message'] = "Le soin '" . h($care_type) . "' a été ajouté avec succès au serpent **" . h($snake['name']) . "**.";
+            } else {
+                $_SESSION['success_message'] = "Le soin a été ajouté avec succès.";
+            }
+
             // Redirige vers la page du premier serpent sélectionné
-            header("Location: snake.php?id=" . (int)$snake_ids[0]);
+            header("Location: snake.php?id=" . (int)$firstSnakeId);
             exit;
         }
     }
