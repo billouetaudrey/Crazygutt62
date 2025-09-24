@@ -1,4 +1,5 @@
 <?php
+session_start(); // Démarre la session au début du script
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/functions.php';
 
@@ -29,7 +30,6 @@ if ($preselectedSnakeId) {
     $preselectedSnake = $stmt->fetch();
 }
 
-$done = false;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Récupérer les IDs des serpents cochés
     $snake_ids = $_POST['snakes'] ?? [];
@@ -46,28 +46,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $date = $_POST['date'] ?? date('Y-m-d');
     $count = (int)($_POST['count'] ?? 1);
     
-    // NOUVEAU : Récupérer le type et la taille du rongeur séparément
     $rongeur_type = $_POST['rongeur_type'] ?? null;
     $rongeur_size = $_POST['rongeur_size'] ?? null;
     
-    // NOUVEAU : Combiner le type et la taille pour le champ meal_type
     $meal_type = ($rongeur_type && $rongeur_size) ? $rongeur_type . ' ' . $rongeur_size : null;
 
-    // NOUVEAU : Récupérer l'état de la proie
     $prey_type = in_array($_POST['prey_type'] ?? '', ['vivant','mort','congelé']) ? $_POST['prey_type'] : 'congelé';
     
-    // NOUVEAU : Récupérer l'état du repas (refusé, en attente)
     $refused = isset($_POST['refused']) ? 1 : 0;
     $pending = isset($_POST['pending']) ? 1 : 0;
     $notes = trim($_POST['notes'] ?? '');
 
-    if ($snake_ids) {
-        // CORRIGÉ : Ajuster la requête pour insérer les bonnes valeurs dans les bonnes colonnes
+    if (!empty($snake_ids)) {
+        // Démarre une transaction pour que toutes les insertions réussissent ou échouent ensemble
+        $pdo->beginTransaction();
+
         $stmt = $pdo->prepare("INSERT INTO feedings (snake_id, date, count, meal_type, prey_type, meal_size, refused, notes, pending) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
         foreach ($snake_ids as $sid) {
             $stmt->execute([(int)$sid, $date, $count, $meal_type, $prey_type, $rongeur_size, $refused, $notes ?: null, $pending]);
         }
-        $done = true;
+        
+        // Valide la transaction
+        $pdo->commit();
+
+        // Récupère le nom du premier serpent pour le message
+        $firstSnakeId = $snake_ids[0];
+        $snakeNameStmt = $pdo->prepare("SELECT name FROM snakes WHERE id = ?");
+        $snakeNameStmt->execute([$firstSnakeId]);
+        $snake = $snakeNameStmt->fetch();
+
+        if ($snake) {
+            $_SESSION['success_message'] = "Repas ajouté avec succès au serpent **" . h($snake['name']) . "**.";
+        } else {
+            $_SESSION['success_message'] = "Repas ajouté avec succès.";
+        }
+        
+        // Redirection vers la page du premier serpent
+        header("Location: snake.php?id=" . $firstSnakeId);
+        exit;
     }
 }
 ?>
@@ -172,9 +188,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="card">
         <h2>Ajouter un repas</h2>
-        <?php if ($done): ?>
-            <div class="helper" style="color:var(--ok)">Repas enregistré ✅</div>
-        <?php endif; ?>
 
         <form method="post">
             <label>Choisir les serpents :</label>
