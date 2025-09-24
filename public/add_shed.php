@@ -1,5 +1,6 @@
 <?php
 try {
+    session_start();
     require_once __DIR__ . '/../includes/db.php';
     require_once __DIR__ . '/../includes/functions.php';
 
@@ -34,16 +35,10 @@ try {
         }
     }
 
-
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Récupérer les IDs des serpents cochés
         $snake_ids = $_POST['snakes'] ?? [];
         
-        // Ajoute l'ID pré-sélectionné même s'il est désactivé
-        if (isset($_POST['preselected_snake_id']) && !in_array($_POST['preselected_snake_id'], $snake_ids)) {
-            $snake_ids[] = (int)$_POST['preselected_snake_id'];
-        }
-
         $date = $_POST['date'] ?? null;
         $complete = isset($_POST['complete']) ? 1 : 0;
         $comment = $_POST['comment'] ?? '';
@@ -53,7 +48,21 @@ try {
             foreach ($snake_ids as $sid) {
                 $stmt->execute([$sid, $date, $complete, $comment]);
             }
-            header("Location: index.php");
+
+            // Récupère le nom du serpent pour le message de succès
+            $firstSnakeId = $snake_ids[0];
+            $snakeNameStmt = $pdo->prepare("SELECT name FROM snakes WHERE id = ?");
+            $snakeNameStmt->execute([$firstSnakeId]);
+            $snake = $snakeNameStmt->fetch();
+
+            if ($snake) {
+                $_SESSION['success_message'] = "Mue ajoutée avec succès au serpent **" . h($snake['name']) . "**.";
+            } else {
+                $_SESSION['success_message'] = "Mue ajoutée avec succès.";
+            }
+            
+            // Nouvelle redirection vers la page du serpent
+            header("Location: snake.php?id=" . $firstSnakeId);
             exit;
         }
     }
@@ -74,9 +83,7 @@ try {
         function toggleAll(source, group) {
             const checkboxes = document.querySelectorAll(`input[name="snakes[]"][data-group="${group}"]`);
             checkboxes.forEach(cb => {
-                if (!cb.disabled) {
-                    cb.checked = source.checked;
-                }
+                cb.checked = source.checked;
             });
         }
     </script>
@@ -113,14 +120,12 @@ try {
                         <?php foreach ($list as $snake): ?>
                             <?php 
                                 $checked = '';
-                                $disabled = '';
                                 if ($preselectedSnakeId && $snake['id'] == $preselectedSnakeId) {
                                     $checked = 'checked';
-                                    $disabled = 'disabled';
                                 }
                             ?>
                             <label style="border:1px solid var(--border-color); padding:5px 10px; border-radius:5px; display:inline-flex; align-items:center; cursor:pointer;">
-                                <input type="checkbox" name="snakes[]" value="<?= (int)$snake['id'] ?>" <?= $checked ?> <?= $disabled ?> data-group="<?= h($groupName) ?>">
+                                <input type="checkbox" name="snakes[]" value="<?= (int)$snake['id'] ?>" <?= $checked ?> data-group="<?= h($groupName) ?>">
                                 <?= h($snake['name']) ?>
                             </label>
                         <?php endforeach; ?>
