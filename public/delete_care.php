@@ -1,24 +1,28 @@
 <?php
-
+session_start();
 require_once __DIR__ . '/../includes/db.php';
-require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/functions.php'; // Add this line
 
-// Vérifie que la requête est de type POST et que les IDs sont présents
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id']) && isset($_POST['snake_id'])) {
-    
-    // Récupère et valide les IDs
-    $careId = (int)$_POST['id'];
-    $snakeId = (int)$_POST['snake_id'];
+    $id = (int)$_POST['id'];
+    $snake_id = (int)$_POST['snake_id'];
 
-    // Prépare et exécute la requête de suppression
-    $stmt = $pdo->prepare("DELETE FROM cares WHERE id = ? AND snake_id = ?");
-    $stmt->execute([$careId, $snakeId]);
+    // Récupère les infos du soin pour le message
+    $stmt = $pdo->prepare("SELECT date, care_type FROM cares WHERE id = ?");
+    $stmt->execute([$id]);
+    $care = $stmt->fetch();
 
-    // Redirige vers la page du serpent après la suppression
-    header("Location: snake.php?id=" . $snakeId);
-    exit;
-} else {
-    // Si la requête n'est pas valide, redirige vers la page d'accueil
-    header("Location: index.php");
+    $stmt = $pdo->prepare("DELETE FROM cares WHERE id = ?");
+    $stmt->execute([$id]);
+
+    if ($care) {
+        $_SESSION['success_message'] = "Le soin de type **" . h($care['care_type']) . "** du " . date('d/m/Y', strtotime($care['date'])) . " a été supprimé avec succès.";
+    } else {
+        $_SESSION['success_message'] = "Le soin a été supprimé avec succès.";
+    }
+
+    header("Location: snake.php?id=" . $snake_id);
     exit;
 }
+header("Location: index.php");
+exit;
