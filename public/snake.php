@@ -1,4 +1,5 @@
 <?php
+session_start(); // Ajoute cette ligne au tout début du fichier
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/functions.php';
 
@@ -103,6 +104,16 @@ define('THUMB_DIR', 'uploads/thumbnails/');
             cursor: pointer;
             font-size: 0.8em;
         }
+
+        /* Style pour le message de succès */
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid #c3e6cb;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
@@ -116,6 +127,15 @@ define('THUMB_DIR', 'uploads/thumbnails/');
     </div>
         <div class="empty"></div>
     </div>
+    
+    <?php
+    // Affiche le message de succès s'il existe et le supprime de la session
+    if (isset($_SESSION['success_message'])) {
+        echo '<div class="alert alert-success">' . $_SESSION['success_message'] . '</div>';
+        unset($_SESSION['success_message']);
+    }
+    ?>
+
     <div class="card">
         <h2>Informations du serpent</h2>
         <details>
