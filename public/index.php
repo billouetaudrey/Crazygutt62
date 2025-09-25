@@ -731,5 +731,22 @@ try {
         }
     });
 </script>
+<script>
+    // Fonction pour gérer l'impression d'un couple
+    function printCouple() {
+        const checkedSnakes = document.querySelectorAll('input[name="snake_ids[]"]:checked');
+
+        if (checkedSnakes.length !== 2) {
+            alert("Veuillez sélectionner exactement deux serpents pour créer une étiquette de couple.");
+            return;
+        }
+
+        const id1 = checkedSnakes[0].value;
+        const id2 = checkedSnakes[1].value;
+
+        window.open(`print.php?id1=${id1}&id2=${id2}`, '_blank');
+    }
+</script>
+                
 </body> 
 </html>
