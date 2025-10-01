@@ -18,6 +18,15 @@ try {
         $refused = isset($_POST['refused']) ? 1 : 0;
         $notes = trim($_POST['notes'] ?? '');
         $pending = isset($_POST['pending']) ? 1 : 0;
+        
+        // **********************************************
+        // * CORRECTION MAJEURE : Construction du meal_type *
+        // **********************************************
+        // meal_type doit être la combinaison du type et de la taille (ex: "souris adulte")
+        $meal_type = ($rongeur_type && $rongeur_size) ? $rongeur_type . ' ' . $rongeur_size : null;
+        
+        // Le champ meal_size dans la DB prendra uniquement la taille (ex: "adulte")
+        $meal_size = $rongeur_size; 
 
         if (empty($ids) || empty($rongeur_type) || empty($rongeur_size) || empty($date)) {
             die('Erreur : Tous les champs requis doivent être remplis.');
@@ -32,11 +41,17 @@ try {
         ');
         
         foreach ($ids as $id) {
-            $stmt->bindValue(1, (int)$id, PDO::PARAM_INT);
-            $stmt->bindValue(2, $date, PDO::PARAM_STR);
-            $stmt->bindValue(3, $rongeur_type, PDO::PARAM_STR);
-            $stmt->bindValue(4, $prey_type, PDO::PARAM_STR);
-            $stmt->bindValue(5, $rongeur_size, PDO::PARAM_STR);
+            $stmt->bindValue(1, (int)$id, PDO::PARAM_INT);      // 1: snake_id
+            $stmt->bindValue(2, $date, PDO::PARAM_STR);         // 2: date
+            
+            // 3: meal_type -> On utilise la combinaison complète
+            $stmt->bindValue(3, $meal_type, PDO::PARAM_STR);    
+            
+            $stmt->bindValue(4, $prey_type, PDO::PARAM_STR);    // 4: prey_type
+            
+            // 5: meal_size -> On utilise la taille seule
+            $stmt->bindValue(5, $meal_size, PDO::PARAM_STR);    
+            
             $stmt->bindValue(6, (int)$count, PDO::PARAM_INT);
             $stmt->bindValue(7, (int)$refused, PDO::PARAM_INT);
             $stmt->bindValue(8, (int)$pending, PDO::PARAM_INT);
@@ -63,6 +78,10 @@ try {
     $snakes = $stmt->fetchAll();
 
 } catch (PDOException $e) {
+    // Si la transaction a échoué, on s'assure qu'elle est rollback
+    if (isset($pdo) && $pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
     die("Erreur de connexion à la base de données : " . $e->getMessage());
 }
 ?>
