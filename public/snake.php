@@ -1,5 +1,5 @@
 <?php
-session_start(); // Ajoute cette ligne au tout début du fichier
+session_start(); // Démarre la session au début du fichier
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/functions.php';
 
@@ -290,12 +290,20 @@ define('THUMB_DIR', 'uploads/thumbnails/');
                     </thead>
                     <tbody>
                         <?php foreach ($feedings as $f): ?>
+                            <?php
+                            // ************************************************************
+                            // * CORRECTION APPLIQUÉE ICI : Extraction du type de rongeur *
+                            // ************************************************************
+                            // La colonne 'meal_type' contient "souris adulte", on extrait "souris".
+                            $full_meal_type = $f['meal_type'] ?: 'N/A';
+                            $meal_type_parts = explode(' ', $full_meal_type);
+                            $rongeur_type = $meal_type_parts[0] ?? $full_meal_type;
+                            // ************************************************************
+                            ?>
                             <tr>
                                 <td><input type="checkbox" name="feeding_ids[]" value="<?= (int)$f['id'] ?>" form="bulk-edit-form"></td>
                                 <td><?= date('d/m/Y', strtotime($f['date'])) ?></td>
-                                <td><?= h($f['meal_type']) ?: 'N/A' ?></td>
-                                <td><?= h($f['meal_size']) ?: 'N/A' ?></td>
-                                <td><?= h($f['prey_type']) ?: 'N/A' ?></td>
+                                <td><?= h($rongeur_type) ?></td> <td><?= h($f['meal_size']) ?: 'N/A' ?></td> <td><?= h($f['prey_type']) ?: 'N/A' ?></td>
                                 <td><?= (int)$f['count'] ?></td>
                                 <td><?= $f['refused'] ? 'Oui' : 'Non' ?></td>
                                 <td><?= $f['pending'] ? 'Oui' : 'Non' ?></td>
