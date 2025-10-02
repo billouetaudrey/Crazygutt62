@@ -25,7 +25,7 @@ try {
         }
     }
 
-    // Fetch all snakes, including the profile_photo_id
+    // Fetch all NON-SOLD snakes, including the profile_photo_id
     $snakes = $pdo->query('
         SELECT
             s.*,
@@ -34,6 +34,8 @@ try {
             snakes s
         LEFT JOIN
             feedings f ON s.id = f.snake_id AND f.refused = 0
+        WHERE
+            s.sold = FALSE -- EXCLUSION DES SERPENTS VENDUS
         GROUP BY
             s.id
         ORDER BY
@@ -59,7 +61,7 @@ try {
     $mealCountsStmt = $pdo->prepare("
         SELECT default_meal_type, COUNT(*) AS count
         FROM snakes
-        WHERE default_meal_type IS NOT NULL AND default_meal_type != ''
+        WHERE default_meal_type IS NOT NULL AND default_meal_type != '' AND sold = FALSE
         GROUP BY default_meal_type
     ");
     $mealCountsStmt->execute();
@@ -93,9 +95,18 @@ try {
         SELECT s.name
         FROM snakes s
         JOIN feedings f ON s.id = f.snake_id
-        WHERE f.pending = 1 AND f.refused = 0
+        WHERE f.pending = 1 AND f.refused = 0 AND s.sold = FALSE
         GROUP BY s.id
     ")->fetchAll(PDO::FETCH_COLUMN);
+
+    // NOUVEAU: Récupérer les serpents VENDUS avec prix et ID pour l'édition
+    $soldSnakesStmt = $pdo->query('
+        SELECT s.id, s.name, s.morph, s.sex, s.sell_date, s.price
+        FROM snakes s
+        WHERE s.sold = TRUE
+        ORDER BY s.sell_date DESC
+    ');
+    $soldSnakes = $soldSnakesStmt->fetchAll();
 
     // Sépare les serpents par catégorie d'âge et récupère la dernière photo
     // + Ajout des drapeaux d'alerte pour les repas
@@ -192,7 +203,11 @@ try {
                             <p class="snake-morph"><?= h($s['morph']) ?></p> 
                             <p class="snake-age"><?= compute_age_from_year((int)$s['birth_year']) ?> ans</p> 
                         </div> 
-                    </a> 
+                    </a>
+                    <form method="post" action="add_sell.php" onsubmit="return confirm('Marquer <?= h($s['name']) ?> comme VENDU ?');" style="margin-top:.5rem;"> 
+                        <input type="hidden" name="snake_id" value="<?= (int)$s['id'] ?>"> 
+                        <button class="btn ok small" type="submit" style="width:100%;">Vendu</button> 
+                    </form> 
                 </div> 
             <?php endforeach; ?> 
         </div> 
@@ -265,7 +280,11 @@ try {
                             <form method="post" action="delete.php" onsubmit="return confirm('Supprimer définitivement ce serpent ?');"> 
                                 <input type="hidden" name="id" value="<?= (int)$s['id'] ?>"> 
                                 <button class="btn danger" type="submit">🗑</button> 
-                            </form> 
+                            </form>
+                            <form method="post" action="add_sell.php" onsubmit="return confirm('Marquer <?= h($s['name']) ?> comme VENDU ?');"> 
+                                <input type="hidden" name="snake_id" value="<?= (int)$s['id'] ?>"> 
+                                <button class="btn ok" type="submit">Vendu</button> 
+                            </form>
                         </td> 
                     </tr> 
                 <?php endforeach; ?> 
@@ -317,7 +336,7 @@ try {
                 <button class="btn secondary dropdown-toggle">⚙️ Gestion</button>
                 <div class="dropdown-menu">
                     <a class="btn secondary" href="data.php">📂 Gestion des données</a>
-                    <a class="btn secondary" href="https://billouetaudrey.ovh/gestion_naissances/">🐍 Gestion des ventes/dépenses</a>
+                    <a class="btn secondary" href="sales.php">💰 Serpents Vendus</a> <a class="btn secondary" href="https://billouetaudrey.ovh/gestion_naissances/">🐍 Gestion des ventes/dépenses</a>
                     <a class="btn secondary" href="https://billouetaudrey.ovh/rongeurs/">🐭 Gestion des rongeurs</a>
                 </div>
             </div>
@@ -346,11 +365,12 @@ try {
                                 </thead>
                                 <tbody>
                                     <?php
+                                    // S'assurer de ne prendre que les serpents non vendus
                                     $pending_meals = $pdo->query("
                                         SELECT f.id, s.name, f.date, f.meal_type, f.comment
                                         FROM feedings f
                                         JOIN snakes s ON s.id = f.snake_id
-                                        WHERE f.pending = 1 AND f.refused = 0
+                                        WHERE f.pending = 1 AND f.refused = 0 AND s.sold = FALSE
                                         ORDER BY f.date DESC
                                     ")->fetchAll();
                                     ?>
@@ -554,6 +574,48 @@ try {
             </details> 
         <?php endif; ?> 
     </div> 
+    
+    <div class="card" style="margin-top:1rem;">
+        <details>
+            <summary>
+                <h2>💰 Serpents Vendus (<?= count($soldSnakes) ?>)</h2>
+            </summary>
+            <?php if (empty($soldSnakes)): ?>
+                <div class="helper">Aucun serpent n'a été marqué comme vendu.</div>
+            <?php else: ?>
+            <div style="overflow:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Sexe</th>
+                            <th>Phase</th>
+                            <th>Date de vente</th>
+                            <th>Prix</th>
+                            <th>Action</th> </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($soldSnakes as $s): ?>
+                        <tr>
+                            <td><?= h($s['name']) ?></td>
+                            <td><?= sex_badge($s['sex']) ?></td>
+                            <td><?= h($s['morph']) ?></td>
+                            <td><?= $s['sell_date'] ? date('d/m/Y', strtotime($s['sell_date'])) : '-' ?></td>
+                            <td style="font-weight: bold;">
+                                <?= $s['price'] !== null ? number_format((float)$s['price'], 2, ',', ' ') . ' €' : '?' ?>
+                            </td>
+                            <td>
+                                <a class="btn secondary small" href="edit_sold_snake.php?id=<?= (int)$s['id'] ?>">Éditer</a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php endif; ?>
+        </details>
+    </div>
+
 
     <div class="card">
         <h2>Reproduction</h2>
@@ -687,8 +749,8 @@ try {
         const snakeCards = document.querySelectorAll('.snake-card'); 
         snakeCards.forEach(card => { 
             card.addEventListener('click', (e) => { 
-                // Empêche le basculement si le clic est sur un lien ou la checkbox elle-même 
-                if (e.target.closest('a') || e.target.type === 'checkbox') { 
+                // Empêche le basculement si le clic est sur un lien, un bouton ou la checkbox elle-même 
+                if (e.target.closest('a') || e.target.type === 'checkbox' || e.target.closest('button')) { 
                     return; 
                 } 
                 const checkbox = card.querySelector('input[type="checkbox"]'); 
@@ -729,6 +791,9 @@ try {
                 }
             });
         }
+        
+        // Attacher printCouple à la portée globale (déjà fait ci-dessous, mais on s'assure qu'il est disponible)
+        window.printCouple = printCouple;
     });
 </script>
 <script>
@@ -747,6 +812,5 @@ try {
         window.open(`print.php?id1=${id1}&id2=${id2}`, '_blank');
     }
 </script>
-                
 </body> 
 </html>
