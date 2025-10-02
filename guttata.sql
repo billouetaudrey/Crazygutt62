@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : localhost
--- Généré le : sam. 20 sep. 2025 à 08:02
+-- Généré le : jeu. 02 oct. 2025 à 07:51
 -- Version du serveur : 10.11.13-MariaDB-0ubuntu0.24.04.1
 -- Version de PHP : 8.3.6
 
@@ -73,7 +73,8 @@ CREATE TABLE `clutches` (
   `lay_date` date NOT NULL,
   `hatch_date` date GENERATED ALWAYS AS (`lay_date` + interval 60 day) STORED,
   `comment` text DEFAULT NULL,
-  `egg_count` int(11) DEFAULT NULL
+  `egg_count` int(11) DEFAULT NULL,
+  `gestation_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -168,7 +169,10 @@ CREATE TABLE `snakes` (
   `meal_type` varchar(50) NOT NULL DEFAULT 'inconnu',
   `profile_photo_id` int(11) DEFAULT NULL,
   `ready_to_breed` tinyint(1) DEFAULT 0,
-  `care` varchar(255) DEFAULT NULL
+  `care` varchar(255) DEFAULT NULL,
+  `sold` tinyint(1) DEFAULT 0,
+  `sell_date` date DEFAULT NULL,
+  `price` decimal(10,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
