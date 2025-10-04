@@ -388,8 +388,21 @@ try {
                                 </tbody>
                             </table>
                         </div>
-                        <div style="margin-top: 1rem;">
-                            <button type="submit" class="btn ok">Marquer comme donné</button>
+                        <div style="margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: flex-end;">
+                            <button type="submit" class="btn ok" name="action" value="given">Marquer comme donné</button>
+                            
+                            <button type="submit" class="btn" 
+                                style="background-color: #007bff; border-color: #007bff; color: white;" 
+                                formaction="update_feeding_status.php" 
+                                name="action" 
+                                value="refused" 
+                                onclick="return confirm('Marquer les repas sélectionnés comme REFUSÉS ? (Ceci mettra fin au statut "en attente" et marquera le repas comme refusé)');">
+                                Marquer comme refusé
+                            </button>
+                            
+                            <button type="submit" class="btn danger" formaction="update_feeding_status.php" name="action" value="cancel" onclick="return confirm('ANNULER les repas sélectionnés ? (Ceci SUPPRIMERA complètement les enregistrements de repas en attente sélectionnés)');">
+                                Annuler
+                            </button>
                         </div>
                     </div>
                 <?php endif; ?>
