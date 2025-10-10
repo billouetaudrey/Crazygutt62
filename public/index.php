@@ -152,13 +152,16 @@ try {
 
         if ($age < 1) {
             $babies[] = $s;
-            if ($needs_feeding_alert) $alert_hungry_babies[] = $s['name'];
+            // MODIFICATION: Ajout du nombre de jours à l'alerte
+            if ($needs_feeding_alert) $alert_hungry_babies[] = $s['name'] . ' (' . $days_since_meal . ' jours)';
         } elseif ($age >= 1 && $age < 2) {
             $subadults[] = $s;
-            if ($needs_feeding_alert) $alert_hungry_subadults[] = $s['name'];
+            // MODIFICATION: Ajout du nombre de jours à l'alerte
+            if ($needs_feeding_alert) $alert_hungry_subadults[] = $s['name'] . ' (' . $days_since_meal . ' jours)';
         } else {
             $adults[] = $s;
-            if ($needs_feeding_alert) $alert_hungry_adults[] = $s['name'];
+            // MODIFICATION: Ajout du nombre de jours à l'alerte
+            if ($needs_feeding_alert) $alert_hungry_adults[] = $s['name'] . ' (' . $days_since_meal . ' jours)';
         }
     }
     
@@ -411,8 +414,8 @@ try {
     <div class="card alert warning" style="margin-bottom: 1rem;">
         ⚠️ Attention, ces bébés n'ont pas mangé depuis plus de 7 jours :
         <ul>
-            <?php foreach ($alert_hungry_babies as $snake_name): ?>
-                <li><?= h($snake_name) ?></li>
+            <?php foreach ($alert_hungry_babies as $snake_name_with_days): // Variable renommée pour plus de clarté ?>
+                <li><?= h($snake_name_with_days) ?></li>
             <?php endforeach; ?>
         </ul>
     </div>
@@ -422,8 +425,8 @@ try {
                     <div class="card alert warning" style="margin-bottom: 1rem;">
                         ⚠️ Attention, ces sub-adultes n'ont pas mangé depuis plus de 7 jours :
                         <ul>
-                            <?php foreach ($alert_hungry_subadults as $snake_name): ?>
-                                <li><?= h($snake_name) ?></li>
+                            <?php foreach ($alert_hungry_subadults as $snake_name_with_days): // Variable renommée pour plus de clarté ?>
+                                <li><?= h($snake_name_with_days) ?></li>
                             <?php endforeach; ?>
                         </ul>
                     </div>
@@ -432,8 +435,8 @@ try {
                     <div class="card alert warning">
                         ⚠️ Attention, ces adultes n'ont pas mangé depuis plus de 7 jours :
                         <ul>
-                            <?php foreach ($alert_hungry_adults as $snake_name): ?>
-                                <li><?= h($snake_name) ?></li>
+                            <?php foreach ($alert_hungry_adults as $snake_name_with_days): // Variable renommée pour plus de clarté ?>
+                                <li><?= h($snake_name_with_days) ?></li>
                             <?php endforeach; ?>
                         </ul>
                     </div>
