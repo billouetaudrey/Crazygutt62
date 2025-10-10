@@ -389,7 +389,7 @@ try {
                             </table>
                         </div>
                         <div style="margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: flex-end;">
-                            <button type="submit" class="btn ok" name="action" value="given">Marquer comme donné</button>
+                            <button type="submit" class="btn ok" name="action" value="given">Marquer comme pris</button>
                             
                             <button type="submit" class="btn" 
                                 style="background-color: #007bff; border-color: #007bff; color: white;" 
