@@ -3,6 +3,8 @@
 Un mini-site pour gérer des fiches de Pantherophis guttatus (cornsnakes). Créé à l'aide de chatgpt et gemini
 Compatible smartphone (Testé sur chrome Andeoid uniquement)
 
+Démo ici : https://darkgoldenrod-clam-492509.hostingersite.com/Snakager/public/
+
 ## Fonctionnalités
 - Thème clair/sombre (bouton lune/soleil sur toutes les pages, mémorisé via localStorage).
 - Liste des serpents, ajout, édition, suppression.
