@@ -64,6 +64,13 @@ define('THUMB_DIR', 'uploads/thumbnails/');
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/xrange.js"></script>
+<script src="https://code.highcharts.com/modules/series-label.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
     <script src="assets/theme.js" defer></script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -218,8 +225,6 @@ define('THUMB_DIR', 'uploads/thumbnails/');
 </div>
     </div>
 
-    ---
-
     <div class="card">
         <h3>Photos du serpent</h3>
         <details>
@@ -264,12 +269,63 @@ define('THUMB_DIR', 'uploads/thumbnails/');
         <?php endif; ?>
     </div>
 
-    ---
-
     <div class="card">
         <h3>Repas</h3>
         <a class="btn" href="add_feeding.php?snake_id=<?= (int)$snake['id'] ?>">+ Ajouter un repas</a>
-        <p>Nombre de repas pris : <strong><?= (int)$mealCount ?></strong></p>
+
+<?php
+// On ne garde que les repas pris (non refusés et non en attente)
+$validFeedings = array_filter($feedings, function($f) {
+    return empty($f['refused']) && empty($f['pending']);
+});
+
+// On les trie par date croissante
+usort($validFeedings, function($a, $b) {
+    return strtotime($a['date']) <=> strtotime($b['date']);
+});
+?>
+
+<?php if (!empty($validFeedings)): ?>
+    <h4>📅 Frise chronologique des repas pris</h4>
+    <div class="timeline-scroll">
+        <div class="timeline">
+            <?php
+            $previousDate = null;
+            foreach ($validFeedings as $f):
+                $dateLabel = date('d/m/Y', strtotime($f['date']));
+                $tooltip = htmlspecialchars("{$f['meal_type']} ({$f['count']})");
+
+                // Icône selon le type de repas
+                $icon = "🐭";
+                if (stripos($f['meal_type'], 'rat') !== false) $icon = "🐀";
+                if (stripos($f['meal_type'], 'poussin') !== false) $icon = "🐥";
+                if (stripos($f['meal_type'], 'adulte') !== false) $icon = "🥩";
+
+                // Calcul de l'écart en jours avec le repas précédent
+                $alertIcon = "";
+                if ($previousDate) {
+                    $daysDiff = (strtotime($f['date']) - strtotime($previousDate)) / 86400;
+                    if ($daysDiff > 10) {
+                        $alertIcon = "❗"; // écart supérieur à 10 jours
+                        $tooltip .= " — ⚠️ Écart de " . round($daysDiff) . " jours";
+                    }
+                }
+                $previousDate = $f['date'];
+            ?>
+                <div class="timeline-event" title="<?= $tooltip ?>">
+                    <div class="timeline-icon"><?= $icon ?></div>
+                    <?php if ($alertIcon): ?>
+                        <div class="timeline-alert" title="Écart de plus de 10 jours"><?= $alertIcon ?></div>
+                    <?php endif; ?>
+                    <div class="timeline-label"><?= $dateLabel ?></div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+<?php else: ?>
+    <div class="helper">Aucun repas pris enregistré pour ce serpent.</div>
+<?php endif; ?>
+<p>Nombre de repas pris : <strong><?= (int)$mealCount ?></strong></p>
 
         <?php if ($feedings): ?>
             <div style="overflow:auto;">
@@ -329,8 +385,6 @@ define('THUMB_DIR', 'uploads/thumbnails/');
         <?php endif; ?>
     </div>
 
-    ---
-
     <div class="card">
         <h3>Mues</h3>
         <a class="btn" href="add_shed.php?snake_id=<?= (int)$snake['id'] ?>">+ Ajouter une mue</a>
@@ -369,8 +423,6 @@ define('THUMB_DIR', 'uploads/thumbnails/');
             <div class="helper">Aucune mue enregistrée pour ce serpent.</div>
         <?php endif; ?>
     </div>
-
-    ---
 
     <div class="card">
         <h3>Soins</h3>
