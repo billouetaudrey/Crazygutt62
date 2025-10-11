@@ -76,6 +76,7 @@ define('THUMB_DIR', 'uploads/thumbnails/');
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= h($snake['name']) ?> — Suivi</title>
     <link rel="stylesheet" href="assets/style.css">
+    
     <style>
         .image-gallery {
             display: flex;
@@ -140,6 +141,10 @@ define('THUMB_DIR', 'uploads/thumbnails/');
     if (isset($_SESSION['success_message'])) {
         echo '<div class="alert alert-success">' . $_SESSION['success_message'] . '</div>';
         unset($_SESSION['success_message']);
+    }
+    // Affiche le message d'erreur d'upload s'il existe
+    if (isset($_GET['upload_error'])) {
+        echo '<div class="alert alert-danger" style="background-color: #f8d7da; color: #721c24; padding: 1rem; margin-bottom: 1rem; border: 1px solid #f5c6cb; border-radius: 5px;">Erreur d\'upload : ' . h($_GET['upload_error']) . '</div>';
     }
     ?>
 
@@ -229,14 +234,35 @@ define('THUMB_DIR', 'uploads/thumbnails/');
         <h3>Photos du serpent</h3>
         <details>
             <summary>Ajouter une nouvelle photo</summary>
-            <form action="upload_photo.php" method="post" enctype="multipart/form-data">
+            
+            <form id="photo-upload-form" action="upload_photo.php" method="post" enctype="multipart/form-data">
                 <input type="hidden" name="id" value="<?= (int)$snake['id'] ?>">
-                <label for="photo">Choisir une image :</label>
-                <input type="file" name="photo" id="photo" accept="image/*" required>
-                <br><br>
-                <button type="submit" class="btn ok">Envoyer la photo</button>
+                
+                <label for="photo_input">Choisir une image :</label>
+                <input type="file" id="photo_input" accept="image/*" required>
+                
+                <input type="hidden" name="photo_data" id="photo_data">
+                
+                <input type="hidden" name="photo_extension" id="photo_extension" value="jpg"> 
+
+                <div style="margin-top: 15px;">
+                    <div id="image-container-wrapper" style="max-width: 500px; max-height: 500px; margin-bottom: 10px; display: none; overflow: hidden;">
+                        <img id="image-to-crop" style="max-width: 100%; display: block;">
+                    </div>
+                    
+                    <div id="cropper-controls" style="display: none; gap: 10px; margin-bottom: 10px;">
+                        <button type="button" class="btn secondary small" id="rotate-left" title="Pivoter à gauche">↺ -45°</button>
+                        <button type="button" class="btn secondary small" id="rotate-right" title="Pivoter à droite">↻ +45°</button>
+                        <button type="button" class="btn secondary small" id="zoom-in" title="Zoomer">+</button>
+                        <button type="button" class="btn secondary small" id="zoom-out" title="Dézoomer">-</button>
+                        <button type="button" class="btn secondary small" id="reset-cropper" title="Réinitialiser">Réinitialiser</button>
+                    </div>
+
+                </div>
+
+                <button type="submit" class="btn ok" id="upload-btn" disabled>Envoyer la photo</button>
             </form>
-        </details>
+            </details>
 
         <?php if ($photos): ?>
             <div class="image-gallery">
@@ -463,5 +489,109 @@ usort($validFeedings, function($a, $b) {
         <?php endif; ?>
     </div>
 </div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const fileInput = document.getElementById('photo_input');
+        const image = document.getElementById('image-to-crop');
+        const uploadBtn = document.getElementById('upload-btn');
+        const photoDataInput = document.getElementById('photo_data');
+        const photoExtInput = document.getElementById('photo_extension');
+        const cropperControls = document.getElementById('cropper-controls');
+        const imageContainerWrapper = document.getElementById('image-container-wrapper');
+        const form = document.getElementById('photo-upload-form');
+        
+        let cropper;
+
+        fileInput.addEventListener('change', (e) => {
+            const files = e.target.files;
+            if (files && files.length > 0) {
+                const file = files[0];
+                
+                // Extraction de l'extension
+                const ext = file.name.split('.').pop().toLowerCase();
+                // On va forcer l'export en JPG pour la soumission par défaut
+                photoExtInput.value = 'jpg'; 
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    image.src = event.target.result;
+                    imageContainerWrapper.style.display = 'block';
+                    cropperControls.style.display = 'flex';
+                    uploadBtn.disabled = false;
+
+                    // Détruire l'instance précédente si elle existe
+                    if (cropper) {
+                        cropper.destroy();
+                    }
+                    
+                    // Initialisation de Cropper.js
+                    cropper = new Cropper(image, {
+                        aspectRatio: NaN, // Pas de ratio fixe, l'utilisateur peut choisir
+                        viewMode: 1, // Restreint le recadrage au conteneur
+                        autoCropArea: 0.9, // 90% de la zone d'image est recadrée par défaut
+                        responsive: true,
+                        background: true
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Gestion des boutons de Cropper avec vérification de l'existence de 'cropper'
+        document.getElementById('rotate-left').addEventListener('click', () => { 
+            if (cropper) cropper.rotate(-45);
+        });
+        document.getElementById('rotate-right').addEventListener('click', () => { 
+            if (cropper) cropper.rotate(45);
+        });
+        document.getElementById('zoom-in').addEventListener('click', () => { 
+            if (cropper) cropper.zoom(0.1);
+        });
+        document.getElementById('zoom-out').addEventListener('click', () => { 
+            if (cropper) cropper.zoom(-0.1);
+        });
+        document.getElementById('reset-cropper').addEventListener('click', () => { 
+            if (cropper) cropper.reset();
+        });
+
+
+        // Soumission du formulaire
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            if (!cropper) {
+                alert('Veuillez sélectionner une image d\'abord.');
+                return;
+            }
+
+            // Récupère les données de l'image recadrée/pivotée au format Base64
+            // On force l'export en JPEG pour un meilleur rapport qualité/taille. 
+            const mimeType = 'image/jpeg';
+            const quality = 0.8;
+            photoExtInput.value = 'jpg'; // On s'assure que le backend utilise JPG
+
+            const canvas = cropper.getCroppedCanvas({
+                maxWidth: 1200, // Limite la taille de l'image finale
+                maxHeight: 1200,
+            });
+
+            // Conversion du canvas en Base64 et suppression de l'entête "data:..."
+            const croppedImageBase64 = canvas.toDataURL(mimeType, quality).split(',')[1];
+            
+            // Mise à jour du champ masqué et soumission du formulaire
+            photoDataInput.value = croppedImageBase64;
+            
+            // Désactivation du bouton pour éviter les doubles clics
+            uploadBtn.disabled = true; 
+            
+            form.submit();
+        });
+    });
+</script>
+
 </body>
 </html>
