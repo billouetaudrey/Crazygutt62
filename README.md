@@ -17,8 +17,10 @@ Démo ici : https://darkgoldenrod-clam-492509.hostingersite.com/Snakager/public/
 - Édition de serpent multiple
 - Affichage répartition des ages, répartition des types de repas
 - Alerte repas à +7 jours ( reset ignoré si " refus " )
+- Ajout bouton "en attente" lors des repas
 - Page statistiques ( globale, par catégories de serpent ( adulte sub bébé ), par serpent )
-
+- Ajout photo + redimension/rotation
+  
 ## Structure
 ```
 guttata/
@@ -77,6 +79,8 @@ Bon élevage 🐍
 <img width="1141" height="755" alt="image" src="https://github.com/user-attachments/assets/9f13a245-1fac-4424-bf76-5fd145088e1d" />
 <img width="1230" height="742" alt="image" src="https://github.com/user-attachments/assets/96b54c52-43a5-4fe7-a85e-8b1020683d79" />
 <img width="1197" height="333" alt="image" src="https://github.com/user-attachments/assets/fa0f044e-880f-44ad-abca-900905b49a5c" />
+<img width="992" height="753" alt="image" src="https://github.com/user-attachments/assets/08fb57ef-b0e7-47c7-be5c-bc988bc3e5eb" />
+
 
 
 
